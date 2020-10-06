@@ -1,0 +1,7 @@
+#Directories
+.vs/
+Includes/
+Libs/
+
+#Files
+*.user
