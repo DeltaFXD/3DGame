@@ -2,6 +2,9 @@
 .vs/
 Includes/
 Libs/
+Debug/
+Release/
+x64/
 
 #Files
 *.user
