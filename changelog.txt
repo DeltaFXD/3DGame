@@ -2,3 +2,6 @@
 -Init
 #2020.10.01
 -More init
+#2020.10.07
+-Basic error logging
+-Basic window
