@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Input">
+      <UniqueIdentifier>{b5f166cc-2bef-4ef8-b221-a073a7febdbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{be0e16ec-d861-4df7-9c12-e2bb4065b2c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -27,19 +33,43 @@
     <ClCompile Include="src\Render\RenderWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Engine\Engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\WindowContainer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\KeyboardEvent.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\KeyboardClass.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Utility\ErrorLogger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Utility\StringConverter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\H\RenderWindow.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\H\ErrorLogger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\H\StringConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\H\Engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\H\WindowContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\H\KeyboardEvent.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\H\KeyboardClass.h">
+      <Filter>Header Files\Input</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

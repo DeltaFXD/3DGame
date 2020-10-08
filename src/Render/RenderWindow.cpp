@@ -1,7 +1,7 @@
-#include "Render/H/RenderWindow.h"
+#include "Engine/H/WindowContainer.h"
 
-bool RenderWindow::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height) {
-
+bool RenderWindow::Initialize(WindowContainer * pWindowContainer, HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height)
+{
 	this->hInstance = hInstance;
 	this->width = width;
 	this->height = height;
@@ -23,9 +23,10 @@ bool RenderWindow::Initialize(HINSTANCE hInstance, std::string window_title, std
 		NULL, //Handle to parent of this window. First window
 		NULL, //Handle to menu or child window identifier
 		this->hInstance, //Handle to the instance of module to be used with this window
-		nullptr); //Param to create window
+		pWindowContainer); //Param to create window
 
-	if (this->handle == NULL) {
+	if (this->handle == NULL)
+	{
 		ErrorLogger::Log(GetLastError(), "CreateWindowEX Failed for window: " + this->window_title);
 		return false;
 	}
@@ -55,10 +56,10 @@ bool RenderWindow::ProcessMessages() {
 	}
 
 	//Check if the window was closed
-	if (msg.message == WM_NULL) {
-
-		if (!IsWindow(this->handle)) {
-
+	if (msg.message == WM_NULL)
+	{
+		if (!IsWindow(this->handle))
+		{
 			this->handle = NULL; //Message processing loop takes care of destroying this window
 			UnregisterClass(this->window_class_wide.c_str(), this->hInstance);
 			return false;
@@ -68,20 +69,62 @@ bool RenderWindow::ProcessMessages() {
 	return true;
 }
 
-RenderWindow::~RenderWindow() {
-	
-	if (this->handle != NULL) {
-
+RenderWindow::~RenderWindow()
+{
+	if (this->handle != NULL)
+	{
 		UnregisterClass(this->window_class_wide.c_str(), this->hInstance);
 		DestroyWindow(handle);
 	}
 }
 
-void RenderWindow::RegisterWindowClass() {
+LRESULT CALLBACK HandleMsgRedirect(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
+	switch (uMsg){
+
+	case WM_CLOSE: {
+		DestroyWindow(hwnd);
+		return 0;
+	}
+	default:
+	{
+		//Get ptr to window class
+		WindowContainer* const pWindow = reinterpret_cast<WindowContainer*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+		//Forward message to window class handler
+		return pWindow->WindowProc(hwnd, uMsg, wParam, lParam);
+	}
+	}
+}
+
+LRESULT CALLBACK HandleMessageSetup(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg) 
+	{
+	case WM_NCCREATE: 
+	{
+		OutputDebugStringA("The window was created.\n");
+		const CREATESTRUCTW* const pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
+		WindowContainer* pWindow = reinterpret_cast<WindowContainer*>(pCreate->lpCreateParams); //Getting WindowContainer
+		if (pWindow == nullptr) 
+		{
+			//Just in case check
+			ErrorLogger::Log("Critical Error: Pointer to window container is null during WM_NCCREATE.");
+			exit(-1);
+		}
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWindow));
+		SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HandleMsgRedirect));
+		return pWindow->WindowProc(hwnd, uMsg, wParam, lParam);
+	}
+	default:
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
+}
+
+void RenderWindow::RegisterWindowClass()
+{
 	WNDCLASSEX wc; //Our Window Class
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; //Flags
-	wc.lpfnWndProc = DefWindowProc; //Pointer to Window Proc function for handling messages from this window
+	wc.lpfnWndProc = HandleMessageSetup; //Pointer to Window Proc function for handling messages from this window
 	wc.cbClsExtra = 0; //# of extra bytes to allocate following the window-class structure
 	wc.cbWndExtra = 0; //# of extra bytes to allocate following the window instance
 	wc.hInstance = this->hInstance; //Handle to the instance that contains the Window Procedure

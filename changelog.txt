@@ -5,3 +5,7 @@
 #2020.10.07
 -Basic error logging
 -Basic window
+#2020.10.08
+-Window handling
+-Keyboard basics
+-Refactor
