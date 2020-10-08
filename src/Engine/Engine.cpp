@@ -15,16 +15,16 @@ void Engine::Update()
 	while (!keyboard.CharBufferIsEmpty())
 	{
 		unsigned char c = keyboard.ReadChar();
-		std::string outmsg = "Char: ";
+		/*std::string outmsg = "Char: ";
 		outmsg += c;
 		outmsg += "\n";
-		OutputDebugStringA(outmsg.c_str());
+		OutputDebugStringA(outmsg.c_str());*/
 	}
 	while (!keyboard.KeyBufferIsEmpty())
 	{
 		KeyboardEvent e = keyboard.ReadKey();
 		unsigned char c = e.GetKeyCode();
-		std::string outmsg = "";
+		/*std::string outmsg = "";
 		if (e.IsPressed())
 		{
 			outmsg += "Key press: ";
@@ -35,6 +35,24 @@ void Engine::Update()
 		}
 		outmsg += c;
 		outmsg += "\n";
-		OutputDebugStringA(outmsg.c_str());
+		OutputDebugStringA(outmsg.c_str());*/
+	}
+	while (!mouse.EventBufferIsEmpty())
+	{
+		/*MouseEvent e = mouse.ReadEvent();
+		std::string outmsg = "X: ";
+		outmsg += std::to_string(e.GetPosX());
+		outmsg += ", Y: ";
+		outmsg += std::to_string(e.GetPosY());
+		outmsg += "\n";
+		OutputDebugStringA(outmsg.c_str());*/
+		/*if (e.GetType() == MouseEvent::EventType::WheelUp)
+		{
+			OutputDebugStringA("Mouse Wheel Up\n");
+		}
+		if (e.GetType() == MouseEvent::EventType::WheelDown)
+		{
+			OutputDebugStringA("Mouse Wheel Down\n");
+		}*/
 	}
 }

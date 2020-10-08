@@ -23,6 +23,8 @@
     <ClCompile Include="src\Engine\WindowContainer.cpp" />
     <ClCompile Include="src\Input\KeyboardClass.cpp" />
     <ClCompile Include="src\Input\KeyboardEvent.cpp" />
+    <ClCompile Include="src\Input\MouseClass.cpp" />
+    <ClCompile Include="src\Input\MouseEvent.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Render\RenderWindow.cpp" />
     <ClCompile Include="src\Utility\ErrorLogger.cpp" />
@@ -36,6 +38,8 @@
     <ClInclude Include="src\Engine\H\WindowContainer.h" />
     <ClInclude Include="src\Input\H\KeyboardClass.h" />
     <ClInclude Include="src\Input\H\KeyboardEvent.h" />
+    <ClInclude Include="src\Input\H\MouseClass.h" />
+    <ClInclude Include="src\Input\H\MouseEvent.h" />
     <ClInclude Include="src\Render\H\RenderWindow.h" />
     <ClInclude Include="src\Utility\H\ErrorLogger.h" />
     <ClInclude Include="src\Utility\H\StringConverter.h" />

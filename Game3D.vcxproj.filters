@@ -63,6 +63,12 @@
     <ClCompile Include="src\Render\RenderWindow.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
+    <ClCompile Include="src\Input\MouseEvent.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\MouseClass.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -88,6 +94,12 @@
     </ClInclude>
     <ClInclude Include="src\Render\H\RenderWindow.h">
       <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\H\MouseEvent.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input\H\MouseClass.h">
+      <Filter>Header Files\Input</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

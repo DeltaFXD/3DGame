@@ -10,3 +10,4 @@
 -Keyboard basics
 -Refactor
 -Misc
+-Mouse basics
