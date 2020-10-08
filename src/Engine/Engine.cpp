@@ -39,8 +39,8 @@ void Engine::Update()
 	}
 	while (!mouse.EventBufferIsEmpty())
 	{
-		/*MouseEvent e = mouse.ReadEvent();
-		std::string outmsg = "X: ";
+		MouseEvent e = mouse.ReadEvent();
+		/*std::string outmsg = "X: ";
 		outmsg += std::to_string(e.GetPosX());
 		outmsg += ", Y: ";
 		outmsg += std::to_string(e.GetPosY());
@@ -54,5 +54,14 @@ void Engine::Update()
 		{
 			OutputDebugStringA("Mouse Wheel Down\n");
 		}*/
+		if (e.GetType() == MouseEvent::EventType::RAW_MOVE)
+		{
+			std::string outmsg = "X: ";
+			outmsg += std::to_string(e.GetPosX());
+			outmsg += ", Y: ";
+			outmsg += std::to_string(e.GetPosY());
+			outmsg += "\n";
+			OutputDebugStringA(outmsg.c_str());
+		}
 	}
 }
