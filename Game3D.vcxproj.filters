@@ -37,6 +37,12 @@
     <Filter Include="Source Files\Render">
       <UniqueIdentifier>{b6099980-681f-4336-a55c-82b88a6d487e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{428ac0cb-3dd3-4648-9e40-82e359ed8dd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{b2af6856-5c31-40b3-ad63-7be2f3d8820a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -69,6 +75,12 @@
     <ClCompile Include="src\Input\MouseClass.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Graphics.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AdapterReader.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -100,6 +112,15 @@
     </ClInclude>
     <ClInclude Include="src\Input\H\MouseClass.h">
       <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\H\Graphics.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\H\Vertex.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\H\AdapterReader.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
