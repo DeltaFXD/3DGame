@@ -81,6 +81,9 @@
     <ClCompile Include="src\Graphics\AdapterReader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utility\Config.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -121,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\H\AdapterReader.h">
       <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\H\Config.h">
+      <Filter>Header Files\Utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

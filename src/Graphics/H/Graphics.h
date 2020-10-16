@@ -10,5 +10,5 @@ private:
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
-	wrl::ComPtr<IDXGISwapChain> swapchain;
+	wrl::ComPtr<IDXGISwapChain1> swapchain;
 };

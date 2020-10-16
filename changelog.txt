@@ -14,3 +14,8 @@
 -Handle raw mouse
 #2020.10.13
 -DirectX adapter
+#2020.10.15
+-Init DirectX
+-Basic Render Loop
+#2020.10.16
+-Basic Config
