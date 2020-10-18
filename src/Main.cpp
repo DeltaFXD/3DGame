@@ -1,6 +1,5 @@
 #include "Engine/H/Engine.h"
 
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	Engine engine;
@@ -8,6 +7,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	while (engine.ProcessMessages() == true)
 	{
 		engine.Update();
+		engine.Render();
 	}
 
 	return 0;

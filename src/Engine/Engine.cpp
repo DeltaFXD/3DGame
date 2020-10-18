@@ -75,3 +75,8 @@ void Engine::Update()
 		}
 	}
 }
+
+void Engine::Render()
+{
+	gfx.Render();
+}

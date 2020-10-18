@@ -45,7 +45,7 @@ bool RenderWindow::ProcessMessages() {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG)); //Initialize the message structure
 
-	if (PeekMessage(&msg, //Where to store message
+	while (PeekMessage(&msg, //Where to store message
 		this->handle, //Handle to window we are checking messages for
 		0, //Minimum Filter Msg Value
 		0, //Maximum Filter Msg Value

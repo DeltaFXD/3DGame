@@ -19,3 +19,5 @@
 -Basic Render Loop
 #2020.10.16
 -Basic Config
+#2020.10.18
+-DirectX Commands
