@@ -17,8 +17,8 @@ private:
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
-	wrl::ComPtr<IDXGISwapChain1> swapchain;
-	wrl::ComPtr<ID3D12Resource> render_target_view;
+	wrl::ComPtr<IDXGISwapChain3> swapchain;
+	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
 	wrl::ComPtr<ID3D12CommandAllocator> command_allocator;
 	wrl::ComPtr<ID3D12DescriptorHeap> heap_desc;
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
@@ -35,4 +35,5 @@ private:
 	wrl::ComPtr<ID3D12Fence> m_fence;
 	UINT64 m_fenceValue;
 	HANDLE m_fenceEvent;
+	UINT m_frameIndex;
 };

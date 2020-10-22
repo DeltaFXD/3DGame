@@ -24,9 +24,11 @@ void Graphics::Render()
 
 	// Present the frame.
 	HRESULT hr;
+	hr = device.Get()->GetDeviceRemovedReason();
 	hr = swapchain.Get()->Present(1, 0);
 	if (FAILED(hr))
 	{
+		hr = device.Get()->GetDeviceRemovedReason();
 		ErrorLogger::Log(hr, "Failed to present frame.");
 		exit(-1);
 	}
@@ -103,7 +105,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	scfd.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	scfd.Windowed = TRUE;
 
-	hr = factory.Get()->CreateSwapChainForHwnd(command_queue.Get(), hwnd, &scd, &scfd, NULL, swapchain.GetAddressOf());
+	IDXGISwapChain1* temp_swap_chain;
+	hr = factory.Get()->CreateSwapChainForHwnd(command_queue.Get(), hwnd, &scd, &scfd, NULL, &temp_swap_chain);
 
 	if (FAILED(hr))
 	{
@@ -124,6 +127,18 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		}
 		exit(-1);
 	}
+	
+	// Next upgrade the IDXGISwapChain1 to a IDXGISwapChain3 interface and store it in a private member variable named m_swapChain.
+	// This will allow us to use the newer functionality such as getting the current back buffer index.
+	hr = temp_swap_chain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)swapchain.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to upgrade SwapChain.");
+		exit(-1);
+	}
+	temp_swap_chain = nullptr;
+
+	m_frameIndex = swapchain.Get()->GetCurrentBackBufferIndex();
 
 	//Factory no longer needed
 	factory.Get()->Release();
@@ -143,8 +158,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log(hr, "Failed to create ID3D12DescriptorHeap");
 		exit(-1);
 	}
-
-	hr = swapchain.Get()->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view.GetAddressOf());
+	//--------frame0
+	hr = swapchain.Get()->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -152,7 +167,22 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-	device.Get()->CreateRenderTargetView(render_target_view.Get(), nullptr, heap_desc.Get()->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc.Get()->GetCPUDescriptorHandleForHeapStart());
+
+	device.Get()->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
+	rtvHandle.Offset(1, m_rtvDescriptorSize);
+	//-----------frame 1
+	hr = swapchain.Get()->GetBuffer(1, __uuidof(ID3D12Resource), (void**)render_target_view[1].GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to get back buffer.");
+		exit(-1);
+	}
+
+	device.Get()->CreateRenderTargetView(render_target_view[1].Get(), nullptr, rtvHandle);
+	rtvHandle.Offset(1, m_rtvDescriptorSize);
+	//---------frame 1 end
 
 	hr = device.Get()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)command_allocator.GetAddressOf());
 
@@ -203,7 +233,7 @@ void Graphics::Load()
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 
 	std::wstring shaderfolder = L"";
-#pragma region DetermineShaderPath
+/*#pragma region DetermineShaderPath
 	if (IsDebuggerPresent() == TRUE)
 	{
 #ifdef _DEBUG //Debug mode
@@ -219,7 +249,7 @@ void Graphics::Load()
 			shaderfolder = L"..\\Release\\";
 	#endif
 #endif 
-	}
+	}*/
 
 	std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
 	hr = D3DCompileFromFile(vertexPath.c_str(), nullptr, nullptr, "main", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
@@ -369,6 +399,8 @@ void Graphics::Load()
 		}
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
+
+	m_frameIndex = swapchain.Get()->GetCurrentBackBufferIndex();
  }
 
  void Graphics::PopulateCommandList()
@@ -399,20 +431,20 @@ void Graphics::Load()
 	command_list.Get()->RSSetScissorRects(1, &m_scissorRect);
 
 	// Indicate that the back buffer will be used as a render target.
-	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc.Get()->GetCPUDescriptorHandleForHeapStart(), 0, m_rtvDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc.Get()->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
 	command_list.Get()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 	// Record commands.
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	const float clearColor[] = { 0.0f, 0.0f, 1.0f, 1.0f };
 	command_list.Get()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	command_list.Get()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	command_list.Get()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	command_list.Get()->DrawInstanced(3, 1, 0, 0);
 
 	// Indicate that the back buffer will now be used to present.
-	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	hr = command_list.Get()->Close();
 	if (FAILED(hr))
