@@ -21,3 +21,5 @@
 -Basic Config
 #2020.10.18
 -DirectX Commands
+#2020.10.22
+-Basic Render Pipeline

@@ -1,5 +1,8 @@
 #pragma once
 #include "Graphics/H/AdapterReader.h"
+#include "Graphics/H/Shaders.h"
+#include <d3dx12.h>
+#include "Graphics/H/Vertex.h"
 
 class Graphics
 {
@@ -9,6 +12,8 @@ public:
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
 	void Load();
+	void WaitForPreviousFrame();
+	void PopulateCommandList();
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
@@ -17,4 +22,17 @@ private:
 	wrl::ComPtr<ID3D12CommandAllocator> command_allocator;
 	wrl::ComPtr<ID3D12DescriptorHeap> heap_desc;
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
+	wrl::ComPtr<ID3D12RootSignature> root_signature;
+	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
+	UINT m_rtvDescriptorSize;
+
+	D3D12_VIEWPORT m_viewport;
+	D3D12_RECT m_scissorRect;
+	
+	wrl::ComPtr<ID3D12Resource> vertex_buffer;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+	wrl::ComPtr<ID3D12Fence> m_fence;
+	UINT64 m_fenceValue;
+	HANDLE m_fenceEvent;
 };
