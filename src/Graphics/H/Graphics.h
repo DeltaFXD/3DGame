@@ -24,6 +24,9 @@ private:
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
+#ifdef _DEBUG //Debug mode
+	wrl::ComPtr<ID3D12InfoQueue> info;
+#endif
 	UINT m_rtvDescriptorSize;
 
 	D3D12_VIEWPORT m_viewport;

@@ -20,11 +20,10 @@ void Graphics::Render()
 
 	// Execute the command list.
 	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
-	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	command_queue.Get()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame.
 	HRESULT hr;
-	hr = device.Get()->GetDeviceRemovedReason();
 	hr = swapchain.Get()->Present(1, 0);
 	if (FAILED(hr))
 	{
@@ -38,6 +37,23 @@ void Graphics::Render()
 
 bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 {
+#pragma region D3Debug
+	if (IsDebuggerPresent() == TRUE)
+	{
+#ifdef _DEBUG //Debug mode
+		wrl::ComPtr<ID3D12Debug> debug_controller;
+		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debug_controller.GetAddressOf())))
+		{
+			debug_controller.Get()->EnableDebugLayer();
+		}
+		else
+		{
+			ErrorLogger::Log("Failed to enable Debug Layer.");
+		}
+#endif
+	}
+
+
 	wrl::ComPtr<IDXGIFactory4> factory;
 	//Call IDXGIFactory1::Release once the factory is no longer required.
 	HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)factory.GetAddressOf());
@@ -191,7 +207,26 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log(hr, "Failed to create ID3D12CommandAllocator.");
 		exit(-1);
 	}
+
+#ifdef _DEBUG //Debug mode
+	hr = device.Get()->QueryInterface(__uuidof(ID3D12InfoQueue), (void**)info.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to get Info Queue");
+	}
+	info.Get()->PushEmptyStorageFilter();
+#endif
 	
+	//Set viewport
+	m_viewport.Width = static_cast<float>(width);
+	m_viewport.Height = static_cast<float>(height);
+
+	//Set scissor rect
+	m_scissorRect.left = 0;
+	m_scissorRect.top = 0;
+	m_scissorRect.right = static_cast<LONG>(width);
+	m_scissorRect.bottom = static_cast<LONG>(height);
+
 	return true;
 }
 
@@ -229,27 +264,31 @@ void Graphics::Load()
 	wrl::ComPtr<ID3DBlob> vertexShader;
 	wrl::ComPtr<ID3DBlob> pixelShader;
 
+#ifdef _DEBUG //Debug mode
 	// Enable better shader debugging with the graphics debugging tools.
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+	UINT compileFlags = 0;
+#endif
 
 	std::wstring shaderfolder = L"";
-/*#pragma region DetermineShaderPath
+#pragma region DetermineShaderPath
 	if (IsDebuggerPresent() == TRUE)
 	{
 #ifdef _DEBUG //Debug mode
 	#ifdef _WIN64 //x64
-			shaderfolder = L"..\\x64\\Debug\\";
+			shaderfolder = L"";
 	#else	//x86 (Win32)
-			shaderfolder = L"..\\Debug\\";
+			shaderfolder = L"";
 	#endif //Release Mode
 	#else
 	#ifdef _WIN64 //x64
-			shaderfolder = L"..\\x64\\Release\\";
+			shaderfolder = L"";
 	#else	//x86 (Win32)
-			shaderfolder = L"..\\Release\\";
+			shaderfolder = L"";
 	#endif
 #endif 
-	}*/
+	}
 
 	std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
 	hr = D3DCompileFromFile(vertexPath.c_str(), nullptr, nullptr, "main", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
@@ -269,8 +308,8 @@ void Graphics::Load()
 	// Define the vertex input layout.
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }//,
+		//{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	// Describe and create the graphics pipeline state object (PSO).
@@ -314,9 +353,9 @@ void Graphics::Load()
 
 	Vertex triangle[] =
 	{
-		{ 0.0f, 0.25f, 0.0f },
-		{ 0.25f, -0.25f, 0.0f },
-		{ -0.25f, -0.25f, 0.0f }
+		{ 0.0f, 0.5f, 0.0f },
+		{ 0.5f, -0.5f, 0.0f },
+		{ -0.5f, -0.5f, 0.0f }
 	};
 
 	const UINT vertexBufferSize = sizeof(triangle);
@@ -437,7 +476,7 @@ void Graphics::Load()
 	command_list.Get()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 	// Record commands.
-	const float clearColor[] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	const float clearColor[] = { 0.5f, 0.0f, 0.5f, 1.0f };
 	command_list.Get()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	command_list.Get()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	command_list.Get()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
