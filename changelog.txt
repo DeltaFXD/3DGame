@@ -27,3 +27,6 @@
 #2020.10.27
 -Add more debugging
 -Fix rendering
+#2020.10.28
+-Fix pixel shader
+-Refactor

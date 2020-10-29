@@ -20,14 +20,14 @@ void Graphics::Render()
 
 	// Execute the command list.
 	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
-	command_queue.Get()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame.
 	HRESULT hr;
-	hr = swapchain.Get()->Present(1, 0);
+	hr = swapchain->Present(1, 0);
 	if (FAILED(hr))
 	{
-		hr = device.Get()->GetDeviceRemovedReason();
+		hr = device->GetDeviceRemovedReason();
 		ErrorLogger::Log(hr, "Failed to present frame.");
 		exit(-1);
 	}
@@ -78,7 +78,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-	hr = device.Get()->CreateCommandQueue(&queueDesc, __uuidof(ID3D12CommandQueue), (void**)command_queue.GetAddressOf());
+	hr = device->CreateCommandQueue(&queueDesc, __uuidof(ID3D12CommandQueue), (void**)command_queue.GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -122,7 +122,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	scfd.Windowed = TRUE;
 
 	IDXGISwapChain1* temp_swap_chain;
-	hr = factory.Get()->CreateSwapChainForHwnd(command_queue.Get(), hwnd, &scd, &scfd, NULL, &temp_swap_chain);
+	hr = factory->CreateSwapChainForHwnd(command_queue.Get(), hwnd, &scd, &scfd, NULL, &temp_swap_chain);
 
 	if (FAILED(hr))
 	{
@@ -154,10 +154,10 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	}
 	temp_swap_chain = nullptr;
 
-	m_frameIndex = swapchain.Get()->GetCurrentBackBufferIndex();
+	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 
 	//Factory no longer needed
-	factory.Get()->Release();
+	factory->Release();
 
 	// Describe and create a render target view (RTV) descriptor heap.
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -165,9 +165,9 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-	hr = device.Get()->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)heap_desc.GetAddressOf());
+	hr = device->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)heap_desc.GetAddressOf());
 
-	m_rtvDescriptorSize = device.Get()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	if (FAILED(hr))
 	{
@@ -175,7 +175,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 	//--------frame0
-	hr = swapchain.Get()->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
+	hr = swapchain->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -183,12 +183,12 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc.Get()->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc->GetCPUDescriptorHandleForHeapStart());
 
-	device.Get()->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
+	device->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
 	rtvHandle.Offset(1, m_rtvDescriptorSize);
 	//-----------frame 1
-	hr = swapchain.Get()->GetBuffer(1, __uuidof(ID3D12Resource), (void**)render_target_view[1].GetAddressOf());
+	hr = swapchain->GetBuffer(1, __uuidof(ID3D12Resource), (void**)render_target_view[1].GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -196,11 +196,11 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-	device.Get()->CreateRenderTargetView(render_target_view[1].Get(), nullptr, rtvHandle);
+	device->CreateRenderTargetView(render_target_view[1].Get(), nullptr, rtvHandle);
 	rtvHandle.Offset(1, m_rtvDescriptorSize);
 	//---------frame 1 end
 
-	hr = device.Get()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)command_allocator.GetAddressOf());
+	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)command_allocator.GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -209,12 +209,12 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	}
 
 #ifdef _DEBUG //Debug mode
-	hr = device.Get()->QueryInterface(__uuidof(ID3D12InfoQueue), (void**)info.GetAddressOf());
+	hr = device->QueryInterface(__uuidof(ID3D12InfoQueue), (void**)info.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to get Info Queue");
 	}
-	info.Get()->PushEmptyStorageFilter();
+	info->PushEmptyStorageFilter();
 #endif
 	
 	//Set viewport
@@ -253,7 +253,7 @@ void Graphics::Load()
 		exit(-1);
 	}
 
-	hr = device.Get()->CreateRootSignature(0, signature.Get()->GetBufferPointer(), signature.Get()->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)root_signature.GetAddressOf());
+	hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)root_signature.GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -308,8 +308,8 @@ void Graphics::Load()
 	// Define the vertex input layout.
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }//,
-		//{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	// Describe and create the graphics pipeline state object (PSO).
@@ -328,14 +328,14 @@ void Graphics::Load()
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
 
-	hr = device.Get()->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
+	hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create PipelineState.");
 		exit(-1);
 	}
 
-	hr = device.Get()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create CommandList.");
@@ -344,7 +344,7 @@ void Graphics::Load()
 
 	// Command lists are created in the recording state, but there is nothing
 	// to record yet. The main loop expects it to be closed, so close it now.
-	hr = command_list.Get()->Close();
+	hr = command_list->Close();
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to close CommandList.");
@@ -353,9 +353,9 @@ void Graphics::Load()
 
 	Vertex triangle[] =
 	{
-		{ 0.0f, 0.5f, 0.0f },
-		{ 0.5f, -0.5f, 0.0f },
-		{ -0.5f, -0.5f, 0.0f }
+		Vertex(0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f),
+		Vertex(0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f),
+		Vertex(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f)
 	};
 
 	const UINT vertexBufferSize = sizeof(triangle);
@@ -364,7 +364,7 @@ void Graphics::Load()
 	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
 	// over. Please read up on Default Heap usage. An upload heap is used here for 
 	// code simplicity and because there are very few verts to actually transfer.
-	hr = device.Get()->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer.GetAddressOf());
+	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create VertexBuffer.");
@@ -374,21 +374,21 @@ void Graphics::Load()
 	// Copy the triangle data to the vertex buffer.
 	UINT8* pVertexDataBegin;
 	CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-	hr = vertex_buffer.Get()->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
+	hr = vertex_buffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to map VertexBuffer.");
 		exit(-1);
 	}
 	memcpy(pVertexDataBegin, triangle, sizeof(triangle));
-	vertex_buffer.Get()->Unmap(0, nullptr);
+	vertex_buffer->Unmap(0, nullptr);
 
 	m_vertexBufferView.BufferLocation = vertex_buffer.Get()->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 	m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
 	// Create synchronization objects and wait until assets have been uploaded to the GPU.
-	hr = device.Get()->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
+	hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create synchronization object.");
@@ -419,7 +419,7 @@ void Graphics::Load()
 	// Signal and increment the fence value.
 	const UINT64 fence = m_fenceValue;
 	HRESULT hr;
-	hr = command_queue.Get()->Signal(m_fence.Get(), fence);
+	hr = command_queue->Signal(m_fence.Get(), fence);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Signal.");
@@ -439,7 +439,7 @@ void Graphics::Load()
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
 
-	m_frameIndex = swapchain.Get()->GetCurrentBackBufferIndex();
+	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
  }
 
  void Graphics::PopulateCommandList()
@@ -448,7 +448,7 @@ void Graphics::Load()
 	// Command list allocators can only be reset when the associated 
 	// command lists have finished execution on the GPU; apps should use 
 	// fences to determine GPU execution progress.
-	hr = command_allocator.Get()->Reset();
+	hr = command_allocator->Reset();
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Reset CommandAllocator.");
@@ -457,7 +457,7 @@ void Graphics::Load()
 
 	// However, when ExecuteCommandList() is called on a particular command 
 	// list, that command list can then be reset at any time and must be before re-recording.
-	hr = command_list.Get()->Reset(command_allocator.Get(), pipeline_state.Get());
+	hr = command_list->Reset(command_allocator.Get(), pipeline_state.Get());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Reset CommandList.");
@@ -465,27 +465,27 @@ void Graphics::Load()
 	}
 
 	// Set necessary state.
-	command_list.Get()->SetGraphicsRootSignature(root_signature.Get());
-	command_list.Get()->RSSetViewports(1, &m_viewport);
-	command_list.Get()->RSSetScissorRects(1, &m_scissorRect);
+	command_list->SetGraphicsRootSignature(root_signature.Get());
+	command_list->RSSetViewports(1, &m_viewport);
+	command_list->RSSetScissorRects(1, &m_scissorRect);
 
 	// Indicate that the back buffer will be used as a render target.
-	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc.Get()->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-	command_list.Get()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+	command_list->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 	// Record commands.
-	const float clearColor[] = { 0.5f, 0.0f, 0.5f, 1.0f };
-	command_list.Get()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	command_list.Get()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	command_list.Get()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	command_list.Get()->DrawInstanced(3, 1, 0, 0);
+	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	command_list->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	command_list->DrawInstanced(3, 1, 0, 0);
 
 	// Indicate that the back buffer will now be used to present.
-	command_list.Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
-	hr = command_list.Get()->Close();
+	hr = command_list->Close();
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to close CommandList.");
