@@ -30,3 +30,5 @@
 #2020.10.28
 -Fix pixel shader
 -Refactor
+#2020.10.29
+-Add non default rasterizer state
