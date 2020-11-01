@@ -19,6 +19,7 @@ private:
 	void Load(int width, int height);
 	void WaitForPreviousFrame();
 	void PopulateCommandList();
+	std::vector<UINT8> GenerateTextureData();
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
@@ -29,10 +30,13 @@ private:
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
+	wrl::ComPtr<ID3D12Resource> texture;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
+	wrl::ComPtr<ID3D12Resource> textureUploadHeap;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
+	wrl::ComPtr<ID3D12DescriptorHeap> srvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
 
 	//Debug mode
@@ -46,10 +50,8 @@ private:
 
 	//Shaders
 	wrl::ComPtr<ID3D12Resource> vertex_buffer;
-	wrl::ComPtr<ID3D12Resource> vertex_buffer2;
 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView2;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;

@@ -37,3 +37,5 @@
 -Implement DepthStencil
 -Finish text rendering
 -Fix window dimensions
+#2020.11.02
+-Texturing partially done (TODO: fix mem leak)

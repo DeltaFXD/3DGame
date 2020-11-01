@@ -185,6 +185,19 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
+	// Describe and create a shader resource view (SRV) heap for the texture.
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	srvHeapDesc.NumDescriptors = 1;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	hr = device->CreateDescriptorHeap(&srvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)srvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create SRV Heap");
+		exit(-1);
+	}
+
 	// Describe and create a sprite font descriptor heap.
 	D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
 	sfHeapDesc.NumDescriptors = 1;
@@ -200,6 +213,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 
 	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+	//Create frame resources
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 	//--------frame0
 	hr = swapchain->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
 
@@ -209,7 +224,6 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	device->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
 	rtvHandle.Offset(1, m_rtvDescriptorSize);
@@ -241,6 +255,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log(hr, "Failed to get Info Queue");
 	}
 	info->PushEmptyStorageFilter();
+	//TODO: set storage filter 
 #endif
 	
 	//Set viewport
@@ -283,20 +298,45 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 
 void Graphics::Load(int width, int height)
 {
-	// Create an empty root signature.
-	D3D12_ROOT_SIGNATURE_DESC rsd;
-	rsd.NumParameters = 0;
-	rsd.pParameters = nullptr;
-	rsd.NumStaticSamplers = 0;
-	rsd.pStaticSamplers = nullptr;
-	rsd.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	HRESULT hr;
+	//Create root signature
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	//Set to highest root signature version
+	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+	//Check for root signature version support
+	hr = device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData));
+	if (FAILED(hr))
+	{
+		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	}
+
+	CD3DX12_DESCRIPTOR_RANGE1 ranges[1] = {};
+	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+
+	CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
+	rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+
+	//Create static sampler desc
+	D3D12_STATIC_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	samplerDesc.ShaderRegister = 0;
+
+	//Create an empty root signature.
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rsd;
+	rsd.Init_1_1(_countof(rootParameters), rootParameters, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	wrl::ComPtr<ID3DBlob> signature;
 	wrl::ComPtr<ID3DBlob> error;
 
-	HRESULT hr;
-
-	hr = D3D12SerializeRootSignature(&rsd, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+	hr = D3DX12SerializeVersionedRootSignature(&rsd, featureData.HighestVersion, &signature, &error);
 
 	if (FAILED(hr))
 	{
@@ -353,7 +393,7 @@ void Graphics::Load(int width, int height)
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	//Create Rasterizer State
@@ -400,24 +440,19 @@ void Graphics::Load(int width, int height)
 		exit(-1);
 	}
 
-	// Command lists are created in the recording state, but there is nothing
-	// to record yet. The main loop expects it to be closed, so close it now.
-	hr = command_list->Close();
-	if (FAILED(hr))
+	//------------triangle
+	Vertex square[] =
 	{
-		ErrorLogger::Log(hr, "Failed to close CommandList.");
-		exit(-1);
-	}
+		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left
+		Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left
+		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right
 
-	//------------1st triangle
-	Vertex triangle[] =
-	{
-		Vertex( 0.0f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
-		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
-		Vertex(-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f)
+		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left
+		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right
 	};
 
-	const UINT vertexBufferSize = sizeof(triangle);
+	const UINT vertexBufferSize = sizeof(square);
 
 	// Note: using upload heaps to transfer static data like vert buffers is not 
 	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
@@ -439,51 +474,90 @@ void Graphics::Load(int width, int height)
 		ErrorLogger::Log(hr, "Failed to map VertexBuffer.");
 		exit(-1);
 	}
-	memcpy(pVertexDataBegin, triangle, sizeof(triangle));
+	memcpy(pVertexDataBegin, square, sizeof(square));
 	vertex_buffer->Unmap(0, nullptr);
 
+	// Initialize the vertex buffer view.
 	m_vertexBufferView.BufferLocation = vertex_buffer.Get()->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 	m_vertexBufferView.SizeInBytes = vertexBufferSize;
-	//----------------1st triangle
+	//----------------
 
-	//----------------2nd triangle
-	Vertex triangle2[] =
-	{
-		Vertex(  0.0f,  0.25f, 0.0f, 0.0f, 1.0f, 0.0f),
-		Vertex( 0.25f, -0.25f, 0.0f, 0.0f, 1.0f, 0.0f),
-		Vertex(-0.25f, -0.25f, 0.0f, 0.0f, 1.0f, 0.0f)
-	};
+	// Note: ComPtr's are CPU objects but this resource needs to stay in scope until
+	// the command list that references it has finished executing on the GPU.
+	// We will flush the GPU at the end of this method to ensure the resource is not
+	// prematurely destroyed.
 
-	const UINT vertexBufferSize2 = sizeof(triangle2);
+	// Describe and create a Texture2D.
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.Width = 256;
+	textureDesc.Height = 256;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-	// Note: using upload heaps to transfer static data like vert buffers is not 
-	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
-	// over. Please read up on Default Heap usage. An upload heap is used here for 
-	// code simplicity and because there are very few verts to actually transfer.
-	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize2), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer2.GetAddressOf());
+	hr = device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		__uuidof(ID3D12Resource),
+		(void**)texture.GetAddressOf()
+	);
 	if (FAILED(hr))
 	{
-		ErrorLogger::Log(hr, "Failed to create VertexBuffer.");
-		exit(-1);
+		ErrorLogger::Log(hr, "Failed to create Texture Buffer");
 	}
 
-	// Copy the triangle data to the vertex buffer.
-	UINT8* pVertexDataBegin2;
-	CD3DX12_RANGE readRange2(0, 0);        // We do not intend to read from this resource on the CPU.
-	hr = vertex_buffer2->Map(0, &readRange2, reinterpret_cast<void**>(&pVertexDataBegin2));
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 1);
+
+	//Create the GPU upload buffer
+	hr = device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		__uuidof(ID3D12Resource),
+		(void**)textureUploadHeap.GetAddressOf()
+	);
 	if (FAILED(hr))
 	{
-		ErrorLogger::Log(hr, "Failed to map VertexBuffer.");
-		exit(-1);
+		ErrorLogger::Log(hr, "Failed to create upload buffer.");
 	}
-	memcpy(pVertexDataBegin2, triangle2, sizeof(triangle2));
-	vertex_buffer2->Unmap(0, nullptr);
 
-	m_vertexBufferView2.BufferLocation = vertex_buffer2.Get()->GetGPUVirtualAddress();
-	m_vertexBufferView2.StrideInBytes = sizeof(Vertex);
-	m_vertexBufferView2.SizeInBytes = vertexBufferSize2;
-	//---------------2nd triangle
+	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the Texture2D.
+	std::vector<UINT8> texture_data = GenerateTextureData();
+
+	D3D12_SUBRESOURCE_DATA textureData = {};
+	textureData.pData = &texture_data[0];
+	textureData.RowPitch = 256 * 4;
+	textureData.SlicePitch = textureData.RowPitch * 256;
+
+	UpdateSubresources(command_list.Get(), texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
+	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+	// Describe and create a SRV for the texture.
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	// Close the command list and execute it to begin the initial GPU setup.
+	hr = command_list->Close();
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to close command list to begin GPU setup.");
+	}
+	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
+	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	//Create depth stencil view
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -534,6 +608,43 @@ void Graphics::Load(int width, int height)
 	// list in our main loop but for now, we just want to wait for setup to 
 	// complete before continuing.
 	WaitForPreviousFrame();
+ }
+
+ // Generate a simple black and white checkerboard texture.
+ std::vector<UINT8> Graphics::GenerateTextureData()
+ {
+	 const UINT rowPitch = 256 * 4;
+	 const UINT cellPitch = rowPitch >> 3;        // The width of a cell in the checkboard texture.
+	 const UINT cellHeight = 256 >> 3;    // The height of a cell in the checkerboard texture.
+	 const UINT textureSize = rowPitch * 256;
+
+	 std::vector<UINT8> data(textureSize);
+	 UINT8* pData = &data[0];
+
+	 for (UINT n = 0; n < textureSize; n += 4)
+	 {
+		 UINT x = n % rowPitch;
+		 UINT y = n / rowPitch;
+		 UINT i = x / cellPitch;
+		 UINT j = y / cellHeight;
+
+		 if (i % 2 == j % 2)
+		 {
+			 pData[n] = 0x00;        // R
+			 pData[n + 1] = 0x00;    // G
+			 pData[n + 2] = 0x00;    // B
+			 pData[n + 3] = 0xff;    // A
+		 }
+		 else
+		 {
+			 pData[n] = 0xff;        // R
+			 pData[n + 1] = 0xff;    // G
+			 pData[n + 2] = 0xff;    // B
+			 pData[n + 3] = 0xff;    // A
+		 }
+	 }
+
+	 return data;
  }
 
  void Graphics::WaitForPreviousFrame()
@@ -592,6 +703,8 @@ void Graphics::Load(int width, int height)
 
 	// Set necessary state.
 	command_list->SetGraphicsRootSignature(root_signature.Get());
+	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
+	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	command_list->RSSetViewports(1, &m_viewport);
 	command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -608,12 +721,9 @@ void Graphics::Load(int width, int height)
 	command_list->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	command_list->DrawInstanced(3, 1, 0, 0);
-
-	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView2);
-	command_list->DrawInstanced(3, 1, 0, 0);
+	command_list->DrawInstanced(6, 1, 0, 0);
 
 	//Draw text
 	ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
@@ -621,13 +731,9 @@ void Graphics::Load(int width, int height)
 	spriteBatch->Begin(command_list.Get());
 
 	spriteFont->DrawString(spriteBatch.get(), L"Hello World!", DirectX::XMFLOAT2(0, 0), DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1, 1));
-	try {
+
 	spriteBatch->End();
- }
- catch (const std::exception& e)
- {
-	 ErrorLogger::Log(e.what());
- }
+
 	// Indicate that the back buffer will now be used to present.
 	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
