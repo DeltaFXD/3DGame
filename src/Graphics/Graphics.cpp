@@ -185,6 +185,19 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
+	// Describe and create a sprite font descriptor heap.
+	D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
+	sfHeapDesc.NumDescriptors = 1;
+	sfHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	sfHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	hr = device->CreateDescriptorHeap(&sfHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)textHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create sprite font Heap");
+		exit(-1);
+	}
+
 	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	//--------frame0
@@ -243,6 +256,27 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	m_scissorRect.top = 0;
 	m_scissorRect.right = static_cast<LONG>(width);
 	m_scissorRect.bottom = static_cast<LONG>(height);
+
+	graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
+
+	spriteHeap = std::make_unique<DirectX::DescriptorHeap>(textHeap.Get());
+
+	DirectX::ResourceUploadBatch resourceUpload(device.Get());
+
+	resourceUpload.Begin();
+
+	spriteFont = std::make_unique<DirectX::SpriteFont>(device.Get(), resourceUpload, L"Data\\Fonts\\comic_sans_ms_16.spritefont", textHeap->GetCPUDescriptorHandleForHeapStart(), textHeap->GetGPUDescriptorHandleForHeapStart());
+
+	DirectX::RenderTargetState rtState(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D32_FLOAT);
+
+	DirectX::SpriteBatchPipelineStateDescription pd(rtState);
+	spriteBatch = std::make_unique<DirectX::SpriteBatch>(device.Get(), resourceUpload, pd);
+
+	auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
+
+	uploadResourcesFinished.wait();
+	
+	spriteBatch->SetViewport(m_viewport);
 
 	return true;
 }
@@ -350,6 +384,7 @@ void Graphics::Load(int width, int height)
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
 	if (FAILED(hr))
@@ -580,6 +615,19 @@ void Graphics::Load(int width, int height)
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView2);
 	command_list->DrawInstanced(3, 1, 0, 0);
 
+	//Draw text
+	ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
+	command_list->SetDescriptorHeaps(_countof(heaps), heaps);
+	spriteBatch->Begin(command_list.Get());
+
+	spriteFont->DrawString(spriteBatch.get(), L"Hello World!", DirectX::XMFLOAT2(0, 0), DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1, 1));
+	try {
+	spriteBatch->End();
+ }
+ catch (const std::exception& e)
+ {
+	 ErrorLogger::Log(e.what());
+ }
 	// Indicate that the back buffer will now be used to present.
 	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
