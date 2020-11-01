@@ -261,9 +261,6 @@ void Graphics::Load()
 		exit(-1);
 	}
 
-	wrl::ComPtr<ID3DBlob> vertexShader;
-	wrl::ComPtr<ID3DBlob> pixelShader;
-
 #ifdef _DEBUG //Debug mode
 	// Enable better shader debugging with the graphics debugging tools.
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -291,17 +288,13 @@ void Graphics::Load()
 	}
 
 	std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
-	hr = D3DCompileFromFile(vertexPath.c_str(), nullptr, nullptr, "main", "vs_5_0", compileFlags, 0, &vertexShader, nullptr);
-	if (FAILED(hr))
+	if (!vertex_shader.Initialize(vertexPath, compileFlags))
 	{
-		ErrorLogger::Log(hr, "Failed to create VertexShader.");
 		exit(-1);
 	}
 	std::wstring pixelPath = shaderfolder + L"pixelshader.hlsl";
-	hr = D3DCompileFromFile(pixelPath.c_str(), nullptr, nullptr, "main", "ps_5_0", compileFlags, 0, &pixelShader, nullptr);
-	if (FAILED(hr))
+	if (!pixel_shader.Initialize(pixelPath, compileFlags))
 	{
-		ErrorLogger::Log(hr, "Failed to create PixelShader.");
 		exit(-1);
 	}
 
@@ -319,12 +312,15 @@ void Graphics::Load()
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 
+	//DepthStencil https://www.youtube.com/watch?v=yhwg_O5HBwQ
+
+
 	// Describe and create the graphics pipeline state object (PSO).
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 	psoDesc.pRootSignature = root_signature.Get();
-	psoDesc.VS = { reinterpret_cast<UINT8*>(vertexShader->GetBufferPointer()), vertexShader->GetBufferSize() };
-	psoDesc.PS = { reinterpret_cast<UINT8*>(pixelShader->GetBufferPointer()), pixelShader->GetBufferSize() };
+	psoDesc.VS = { reinterpret_cast<UINT8*>(vertex_shader.GeBuffer()->GetBufferPointer()), vertex_shader.GeBuffer()->GetBufferSize() };
+	psoDesc.PS = { reinterpret_cast<UINT8*>(pixel_shader.GeBuffer()->GetBufferPointer()), pixel_shader.GeBuffer()->GetBufferSize() };
 	psoDesc.RasterizerState = rasterizerDesc;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState.DepthEnable = FALSE;

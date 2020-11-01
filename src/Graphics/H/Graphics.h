@@ -3,6 +3,10 @@
 #include "Graphics/H/Shaders.h"
 #include <d3dx12.h>
 #include "Graphics/H/Vertex.h"
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
+#include "DescriptorHeap.h"
+#include "ResourceUploadBatch.h"
 
 class Graphics
 {
@@ -33,10 +37,15 @@ private:
 	D3D12_RECT m_scissorRect;
 	
 	wrl::ComPtr<ID3D12Resource> vertex_buffer;
+	VertexShader vertex_shader;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	PixelShader pixel_shader;
 
 	wrl::ComPtr<ID3D12Fence> m_fence;
 	UINT64 m_fenceValue;
 	HANDLE m_fenceEvent;
 	UINT m_frameIndex;
+
+	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
+	std::unique_ptr<DirectX::SpriteFont> spriteFont;
 };
