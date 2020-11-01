@@ -8,7 +8,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 		return false;
 	}
 
-	Load();
+	Load(width, height);
 
 	return true;
 }
@@ -165,15 +165,28 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-	hr = device->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)heap_desc.GetAddressOf());
+	hr = device->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)rtvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create RTV Heap");
+		exit(-1);
+	}
+
+	// Describe and create a depth stencil view (DSV) descriptor heap.
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	hr = device->CreateDescriptorHeap(&dsvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)dsvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create DSV Heap");
+		exit(-1);
+	}
 
 	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create ID3D12DescriptorHeap");
-		exit(-1);
-	}
 	//--------frame0
 	hr = swapchain->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
 
@@ -183,7 +196,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	device->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
 	rtvHandle.Offset(1, m_rtvDescriptorSize);
@@ -218,8 +231,12 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 #endif
 	
 	//Set viewport
+	m_viewport.TopLeftX = 0;
+	m_viewport.TopLeftY = 0;
 	m_viewport.Width = static_cast<float>(width);
 	m_viewport.Height = static_cast<float>(height);
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
 
 	//Set scissor rect
 	m_scissorRect.left = 0;
@@ -230,7 +247,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	return true;
 }
 
-void Graphics::Load()
+void Graphics::Load(int width, int height)
 {
 	// Create an empty root signature.
 	D3D12_ROOT_SIGNATURE_DESC rsd;
@@ -313,7 +330,11 @@ void Graphics::Load()
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 
 	//DepthStencil https://www.youtube.com/watch?v=yhwg_O5HBwQ
-
+	D3D12_DEPTH_STENCIL_DESC depth_stencilDesc;
+	ZeroMemory(&depth_stencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
+	depth_stencilDesc.DepthEnable = TRUE;
+	depth_stencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depth_stencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	// Describe and create the graphics pipeline state object (PSO).
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -323,8 +344,7 @@ void Graphics::Load()
 	psoDesc.PS = { reinterpret_cast<UINT8*>(pixel_shader.GeBuffer()->GetBufferPointer()), pixel_shader.GeBuffer()->GetBufferSize() };
 	psoDesc.RasterizerState = rasterizerDesc;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthEnable = FALSE;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.DepthStencilState = depth_stencilDesc;
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
@@ -354,11 +374,12 @@ void Graphics::Load()
 		exit(-1);
 	}
 
+	//------------1st triangle
 	Vertex triangle[] =
 	{
-		Vertex(0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f),
-		Vertex(0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f),
-		Vertex(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f)
+		Vertex( 0.0f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
+		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f),
+		Vertex(-0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f)
 	};
 
 	const UINT vertexBufferSize = sizeof(triangle);
@@ -389,6 +410,73 @@ void Graphics::Load()
 	m_vertexBufferView.BufferLocation = vertex_buffer.Get()->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 	m_vertexBufferView.SizeInBytes = vertexBufferSize;
+	//----------------1st triangle
+
+	//----------------2nd triangle
+	Vertex triangle2[] =
+	{
+		Vertex(  0.0f,  0.25f, 0.0f, 0.0f, 1.0f, 0.0f),
+		Vertex( 0.25f, -0.25f, 0.0f, 0.0f, 1.0f, 0.0f),
+		Vertex(-0.25f, -0.25f, 0.0f, 0.0f, 1.0f, 0.0f)
+	};
+
+	const UINT vertexBufferSize2 = sizeof(triangle2);
+
+	// Note: using upload heaps to transfer static data like vert buffers is not 
+	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
+	// over. Please read up on Default Heap usage. An upload heap is used here for 
+	// code simplicity and because there are very few verts to actually transfer.
+	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize2), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer2.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create VertexBuffer.");
+		exit(-1);
+	}
+
+	// Copy the triangle data to the vertex buffer.
+	UINT8* pVertexDataBegin2;
+	CD3DX12_RANGE readRange2(0, 0);        // We do not intend to read from this resource on the CPU.
+	hr = vertex_buffer2->Map(0, &readRange2, reinterpret_cast<void**>(&pVertexDataBegin2));
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to map VertexBuffer.");
+		exit(-1);
+	}
+	memcpy(pVertexDataBegin2, triangle2, sizeof(triangle2));
+	vertex_buffer2->Unmap(0, nullptr);
+
+	m_vertexBufferView2.BufferLocation = vertex_buffer2.Get()->GetGPUVirtualAddress();
+	m_vertexBufferView2.StrideInBytes = sizeof(Vertex);
+	m_vertexBufferView2.SizeInBytes = vertexBufferSize2;
+	//---------------2nd triangle
+
+	//Create depth stencil view
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+	hr = device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthOptimizedClearValue,
+		__uuidof(ID3D12Resource),
+		(void**)depth_stencil.GetAddressOf()
+	);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create Stencil Buffer");
+		exit(-1);
+	}
+
+	device->CreateDepthStencilView(depth_stencil.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Create synchronization objects and wait until assets have been uploaded to the GPU.
 	hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
@@ -475,14 +563,21 @@ void Graphics::Load()
 	// Indicate that the back buffer will be used as a render target.
 	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(heap_desc->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-	command_list->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	command_list->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 	// Record commands.
 	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	command_list->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	command_list->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
 	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	command_list->DrawInstanced(3, 1, 0, 0);
+
+	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView2);
 	command_list->DrawInstanced(3, 1, 0, 0);
 
 	// Indicate that the back buffer will now be used to present.

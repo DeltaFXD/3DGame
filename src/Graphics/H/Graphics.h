@@ -15,7 +15,7 @@ public:
 	void Render();
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
-	void Load();
+	void Load(int width, int height);
 	void WaitForPreviousFrame();
 	void PopulateCommandList();
 
@@ -23,8 +23,10 @@ private:
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
 	wrl::ComPtr<IDXGISwapChain3> swapchain;
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
+	wrl::ComPtr<ID3D12Resource> depth_stencil;
 	wrl::ComPtr<ID3D12CommandAllocator> command_allocator;
-	wrl::ComPtr<ID3D12DescriptorHeap> heap_desc;
+	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
+	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
@@ -37,8 +39,12 @@ private:
 	D3D12_RECT m_scissorRect;
 	
 	wrl::ComPtr<ID3D12Resource> vertex_buffer;
-	VertexShader vertex_shader;
+	wrl::ComPtr<ID3D12Resource> vertex_buffer2;
+
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView2;
+
+	VertexShader vertex_shader;
 	PixelShader pixel_shader;
 
 	wrl::ComPtr<ID3D12Fence> m_fence;
