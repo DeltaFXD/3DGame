@@ -36,3 +36,4 @@
 -Refactor shaders
 -Implement DepthStencil
 -Finish text rendering
+-Fix window dimensions
