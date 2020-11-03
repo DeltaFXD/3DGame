@@ -53,7 +53,6 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 #endif
 	}
 
-
 	wrl::ComPtr<IDXGIFactory4> factory;
 	//Call IDXGIFactory1::Release once the factory is no longer required.
 	HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)factory.GetAddressOf());
@@ -175,7 +174,6 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-
 	device->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
 	rtvHandle.Offset(1, m_rtvDescriptorSize);
 	//-----------frame 1
@@ -206,7 +204,21 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log(hr, "Failed to get Info Queue");
 	}
 	info->PushEmptyStorageFilter();
-	//TODO: set storage filter 
+	D3D12_INFO_QUEUE_FILTER_DESC filterDesc;
+	D3D12_MESSAGE_SEVERITY msList[] = { D3D12_MESSAGE_SEVERITY_INFO };
+	ZeroMemory(&filterDesc, sizeof(filterDesc));
+	filterDesc.NumCategories = 0;
+	filterDesc.pCategoryList = nullptr;
+	filterDesc.NumSeverities = 1;
+	filterDesc.pSeverityList = msList;
+	D3D12_INFO_QUEUE_FILTER filter;
+	ZeroMemory(&filter, sizeof(filter));
+	filter.DenyList = filterDesc;
+	hr = info->AddStorageFilterEntries(&filter);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to apply InfoQueue filter.");
+	}
 #endif
 	
 	//Set viewport
