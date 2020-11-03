@@ -237,24 +237,24 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 
 	graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
 
-	spriteHeap = std::make_unique<DirectX::DescriptorHeap>(textHeap.Get());
+	//spriteHeap = std::make_unique<DirectX::DescriptorHeap>(textHeap.Get());
 
 	DirectX::ResourceUploadBatch resourceUpload(device.Get());
 
 	resourceUpload.Begin();
 
-	spriteFont = std::make_unique<DirectX::SpriteFont>(device.Get(), resourceUpload, L"Data\\Fonts\\comic_sans_ms_16.spritefont", textHeap->GetCPUDescriptorHandleForHeapStart(), textHeap->GetGPUDescriptorHandleForHeapStart());
+	//spriteFont = std::make_unique<DirectX::SpriteFont>(device.Get(), resourceUpload, L"Data\\Fonts\\comic_sans_ms_16.spritefont", textHeap->GetCPUDescriptorHandleForHeapStart(), textHeap->GetGPUDescriptorHandleForHeapStart());
 
-	DirectX::RenderTargetState rtState(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D32_FLOAT);
+	//DirectX::RenderTargetState rtState(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D32_FLOAT);
 
-	DirectX::SpriteBatchPipelineStateDescription pd(rtState);
-	spriteBatch = std::make_unique<DirectX::SpriteBatch>(device.Get(), resourceUpload, pd);
+	//DirectX::SpriteBatchPipelineStateDescription pd(rtState);
+	//spriteBatch = std::make_unique<DirectX::SpriteBatch>(device.Get(), resourceUpload, pd);
 
 	auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
 
 	uploadResourcesFinished.wait();
 	
-	spriteBatch->SetViewport(m_viewport);
+	//spriteBatch->SetViewport(m_viewport);
 
 	return true;
 }
@@ -302,7 +302,7 @@ void Graphics::CreateDescriptorHeaps()
 	}*/
 
 	// Describe and create a sprite font descriptor heap.
-	D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
+	/*D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
 	sfHeapDesc.NumDescriptors = 1;
 	sfHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	sfHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -312,7 +312,7 @@ void Graphics::CreateDescriptorHeaps()
 	{
 		ErrorLogger::Log(hr, "Failed to create sprite font Heap");
 		exit(-1);
-	}
+	}*/
 }
 
 void Graphics::Load(int width, int height)
@@ -629,43 +629,6 @@ void Graphics::Load(int width, int height)
 	WaitForPreviousFrame();
  }
 
- // Generate a simple black and white checkerboard texture.
- std::vector<UINT8> Graphics::GenerateTextureData()
- {
-	 const UINT rowPitch = 256 * 4;
-	 const UINT cellPitch = rowPitch >> 3;        // The width of a cell in the checkboard texture.
-	 const UINT cellHeight = 256 >> 3;    // The height of a cell in the checkerboard texture.
-	 const UINT textureSize = rowPitch * 256;
-
-	 std::vector<UINT8> data(textureSize);
-	 UINT8* pData = &data[0];
-
-	 for (UINT n = 0; n < textureSize; n += 4)
-	 {
-		 UINT x = n % rowPitch;
-		 UINT y = n / rowPitch;
-		 UINT i = x / cellPitch;
-		 UINT j = y / cellHeight;
-
-		 if (i % 2 == j % 2)
-		 {
-			 pData[n] = 0x00;        // R
-			 pData[n + 1] = 0x00;    // G
-			 pData[n + 2] = 0x00;    // B
-			 pData[n + 3] = 0xff;    // A
-		 }
-		 else
-		 {
-			 pData[n] = 0xff;        // R
-			 pData[n + 1] = 0xff;    // G
-			 pData[n + 2] = 0xff;    // B
-			 pData[n + 3] = 0xff;    // A
-		 }
-	 }
-
-	 return data;
- }
-
  void Graphics::WaitForPreviousFrame()
  {
 	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
@@ -745,13 +708,13 @@ void Graphics::Load(int width, int height)
 	command_list->DrawInstanced(6, 1, 0, 0);
 
 	//Draw text
-	ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
+	/*ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
 	command_list->SetDescriptorHeaps(_countof(heaps), heaps);
 	spriteBatch->Begin(command_list.Get());
 
 	spriteFont->DrawString(spriteBatch.get(), L"Hello World!", DirectX::XMFLOAT2(0, 0), DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1, 1));
 
-	spriteBatch->End();
+	spriteBatch->End();*/
 
 	// Indicate that the back buffer will now be used to present.
 	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

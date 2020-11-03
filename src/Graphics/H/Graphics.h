@@ -20,7 +20,6 @@ private:
 	void Load(int width, int height);
 	void WaitForPreviousFrame();
 	void PopulateCommandList();
-	std::vector<UINT8> GenerateTextureData();
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
@@ -33,12 +32,12 @@ private:
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
 	//wrl::ComPtr<ID3D12Resource> texture;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
-	wrl::ComPtr<ID3D12Resource> textureUploadHeap;
+	//wrl::ComPtr<ID3D12Resource> textureUploadHeap;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 	//wrl::ComPtr<ID3D12DescriptorHeap> srvHeap;
-	wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
+	//wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
 
 	//Debug mode
 #ifdef _DEBUG
@@ -64,7 +63,7 @@ private:
 	UINT m_frameIndex;
 
 	std::unique_ptr<DirectX::GraphicsMemory> graphicsMemory;
-	std::unique_ptr<DirectX::DescriptorHeap> spriteHeap;
+	/*std::unique_ptr<DirectX::DescriptorHeap> spriteHeap;
 	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
-	std::unique_ptr<DirectX::SpriteFont> spriteFont;
+	std::unique_ptr<DirectX::SpriteFont> spriteFont;*/
 };
