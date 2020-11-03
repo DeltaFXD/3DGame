@@ -66,12 +66,12 @@ void Engine::Update()
 		}*/
 		if (e.GetType() == MouseEvent::EventType::RAW_MOVE)
 		{
-			std::string outmsg = "X: ";
+			/*std::string outmsg = "X: ";
 			outmsg += std::to_string(e.GetPosX());
 			outmsg += ", Y: ";
 			outmsg += std::to_string(e.GetPosY());
 			outmsg += "\n";
-			OutputDebugStringA(outmsg.c_str());
+			OutputDebugStringA(outmsg.c_str());*/
 		}
 	}
 }

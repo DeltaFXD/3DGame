@@ -39,3 +39,5 @@
 -Fix window dimensions
 #2020.11.02
 -Texturing partially done (TODO: fix mem leak)
+#2020.11.03
+-Small refactor

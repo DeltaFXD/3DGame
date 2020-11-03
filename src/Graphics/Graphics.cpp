@@ -159,57 +159,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	//Factory no longer needed
 	factory->Release();
 
-	// Describe and create a render target view (RTV) descriptor heap.
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = Config::GetBufferFrameCount();
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	hr = device->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)rtvHeap.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create RTV Heap");
-		exit(-1);
-	}
-
-	// Describe and create a depth stencil view (DSV) descriptor heap.
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	hr = device->CreateDescriptorHeap(&dsvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)dsvHeap.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create DSV Heap");
-		exit(-1);
-	}
-
-	// Describe and create a shader resource view (SRV) heap for the texture.
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-	hr = device->CreateDescriptorHeap(&srvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)srvHeap.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create SRV Heap");
-		exit(-1);
-	}
-
-	// Describe and create a sprite font descriptor heap.
-	D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
-	sfHeapDesc.NumDescriptors = 1;
-	sfHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	sfHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-	hr = device->CreateDescriptorHeap(&sfHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)textHeap.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create sprite font Heap");
-		exit(-1);
-	}
+	//Create Descriptor Heaps
+	CreateDescriptorHeaps();
 
 	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -294,6 +245,62 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	spriteBatch->SetViewport(m_viewport);
 
 	return true;
+}
+
+void Graphics::CreateDescriptorHeaps()
+{
+	HRESULT hr;
+	// Describe and create a render target view (RTV) descriptor heap.
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+	rtvHeapDesc.NumDescriptors = Config::GetBufferFrameCount();
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	hr = device->CreateDescriptorHeap(&rtvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)rtvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create RTV Heap");
+		exit(-1);
+	}
+
+	// Describe and create a depth stencil view (DSV) descriptor heap.
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	hr = device->CreateDescriptorHeap(&dsvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)dsvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create DSV Heap");
+		exit(-1);
+	}
+
+	// Describe and create a shader resource view (SRV) heap for the texture.
+	/*D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	srvHeapDesc.NumDescriptors = 1;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	hr = device->CreateDescriptorHeap(&srvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)srvHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create SRV Heap");
+		exit(-1);
+	}*/
+
+	// Describe and create a sprite font descriptor heap.
+	D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
+	sfHeapDesc.NumDescriptors = 1;
+	sfHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	sfHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	hr = device->CreateDescriptorHeap(&sfHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)textHeap.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create sprite font Heap");
+		exit(-1);
+	}
 }
 
 void Graphics::Load(int width, int height)
@@ -489,7 +496,7 @@ void Graphics::Load(int width, int height)
 	// prematurely destroyed.
 
 	// Describe and create a Texture2D.
-	D3D12_RESOURCE_DESC textureDesc = {};
+	/*D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.MipLevels = 1;
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	textureDesc.Width = 256;
@@ -548,7 +555,7 @@ void Graphics::Load(int width, int height)
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());*/
 
 	// Close the command list and execute it to begin the initial GPU setup.
 	hr = command_list->Close();
@@ -703,8 +710,8 @@ void Graphics::Load(int width, int height)
 
 	// Set necessary state.
 	command_list->SetGraphicsRootSignature(root_signature.Get());
-	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
-	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+	/*ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
+	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);*/
 	command_list->RSSetViewports(1, &m_viewport);
 	command_list->RSSetScissorRects(1, &m_scissorRect);
 
