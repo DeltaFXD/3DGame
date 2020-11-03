@@ -469,16 +469,20 @@ void Graphics::Load(int width, int height)
 	//------------triangle
 	Vertex square[] =
 	{
-		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left
-		Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left
-		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
+		Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left		-	[1]
+		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right		-	[2]
+		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
+	};
 
-		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left
-		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right
-		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right
+	DWORD indices[] =
+	{
+		0, 1, 2,
+		0, 2, 3
 	};
 
 	const UINT vertexBufferSize = sizeof(square);
+	const UINT indexBufferSize = sizeof(indices);
 
 	// Note: using upload heaps to transfer static data like vert buffers is not 
 	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
@@ -504,10 +508,33 @@ void Graphics::Load(int width, int height)
 	vertex_buffer->Unmap(0, nullptr);
 
 	// Initialize the vertex buffer view.
-	m_vertexBufferView.BufferLocation = vertex_buffer.Get()->GetGPUVirtualAddress();
+	m_vertexBufferView.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 	m_vertexBufferView.SizeInBytes = vertexBufferSize;
 	//----------------
+
+	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)index_buffer.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create IndexBuffer.");
+		exit(-1);
+	}
+	//Copy index data to buffer.
+	UINT* pIndexDataBegin;
+	CD3DX12_RANGE readRange2(0, 0);
+	hr = index_buffer->Map(0, &readRange2, reinterpret_cast<void**>(&pIndexDataBegin));
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to map IndexBuffer.");
+		exit(-1);
+	}
+	memcpy(pIndexDataBegin, indices, sizeof(indices));
+	index_buffer->Unmap(0, nullptr);
+
+	//Initialize the index buffer view
+	m_indexBufferView.BufferLocation = index_buffer->GetGPUVirtualAddress();
+	m_indexBufferView.SizeInBytes = indexBufferSize;
+	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
 	// Describe and create a SRV for the texture.
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -652,7 +679,8 @@ void Graphics::Load(int width, int height)
 	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	command_list->DrawInstanced(6, 1, 0, 0);
+	command_list->IASetIndexBuffer(&m_indexBufferView);
+	command_list->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	//Draw text
 	//TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

@@ -9,7 +9,6 @@
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
-#include <DirectXHelpers.h>
 
 class Graphics
 {
@@ -53,8 +52,10 @@ private:
 
 	//Shaders
 	wrl::ComPtr<ID3D12Resource> vertex_buffer;
+	wrl::ComPtr<ID3D12Resource> index_buffer;
 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;
