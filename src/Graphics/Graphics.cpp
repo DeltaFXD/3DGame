@@ -3,6 +3,20 @@
 
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
+	//Set viewport
+	m_viewport.TopLeftX = 0;
+	m_viewport.TopLeftY = 0;
+	m_viewport.Width = static_cast<float>(width);
+	m_viewport.Height = static_cast<float>(height);
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
+
+	//Set scissor rect
+	m_scissorRect.left = 0;
+	m_scissorRect.top = 0;
+	m_scissorRect.right = static_cast<LONG>(width);
+	m_scissorRect.bottom = static_cast<LONG>(height);
+
 	if (!InitializeDirectX(hwnd, width, height))
 	{
 		return false;
@@ -71,6 +85,30 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log(hr, "Failed to create ID3D12Device");
 		exit(-1);
 	}
+
+#ifdef _DEBUG //Debug mode
+	hr = device->QueryInterface(__uuidof(ID3D12InfoQueue), (void**)info.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to get Info Queue");
+	}
+	info->PushEmptyStorageFilter();
+	D3D12_INFO_QUEUE_FILTER_DESC filterDesc;
+	D3D12_MESSAGE_SEVERITY msList[] = { D3D12_MESSAGE_SEVERITY_INFO };
+	ZeroMemory(&filterDesc, sizeof(filterDesc));
+	filterDesc.NumCategories = 0;
+	filterDesc.pCategoryList = nullptr;
+	filterDesc.NumSeverities = 1;
+	filterDesc.pSeverityList = msList;
+	D3D12_INFO_QUEUE_FILTER filter;
+	ZeroMemory(&filter, sizeof(filter));
+	filter.DenyList = filterDesc;
+	hr = info->AddStorageFilterEntries(&filter);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to apply InfoQueue filter.");
+	}
+#endif
 
 	//Command queue describer
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -143,7 +181,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 	
-	// Next upgrade the IDXGISwapChain1 to a IDXGISwapChain3 interface and store it in a private member variable named m_swapChain.
+	// Next upgrade the IDXGISwapChain1 to a IDXGISwapChain3 interface and store it.
 	// This will allow us to use the newer functionality such as getting the current back buffer index.
 	hr = temp_swap_chain->QueryInterface(__uuidof(IDXGISwapChain3), (void**)swapchain.GetAddressOf());
 	if (FAILED(hr))
@@ -197,44 +235,6 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 		exit(-1);
 	}
 
-#ifdef _DEBUG //Debug mode
-	hr = device->QueryInterface(__uuidof(ID3D12InfoQueue), (void**)info.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to get Info Queue");
-	}
-	info->PushEmptyStorageFilter();
-	D3D12_INFO_QUEUE_FILTER_DESC filterDesc;
-	D3D12_MESSAGE_SEVERITY msList[] = { D3D12_MESSAGE_SEVERITY_INFO };
-	ZeroMemory(&filterDesc, sizeof(filterDesc));
-	filterDesc.NumCategories = 0;
-	filterDesc.pCategoryList = nullptr;
-	filterDesc.NumSeverities = 1;
-	filterDesc.pSeverityList = msList;
-	D3D12_INFO_QUEUE_FILTER filter;
-	ZeroMemory(&filter, sizeof(filter));
-	filter.DenyList = filterDesc;
-	hr = info->AddStorageFilterEntries(&filter);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to apply InfoQueue filter.");
-	}
-#endif
-	
-	//Set viewport
-	m_viewport.TopLeftX = 0;
-	m_viewport.TopLeftY = 0;
-	m_viewport.Width = static_cast<float>(width);
-	m_viewport.Height = static_cast<float>(height);
-	m_viewport.MinDepth = 0.0f;
-	m_viewport.MaxDepth = 1.0f;
-
-	//Set scissor rect
-	m_scissorRect.left = 0;
-	m_scissorRect.top = 0;
-	m_scissorRect.right = static_cast<LONG>(width);
-	m_scissorRect.bottom = static_cast<LONG>(height);
-
 	graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
 
 	//spriteHeap = std::make_unique<DirectX::DescriptorHeap>(textHeap.Get());
@@ -243,6 +243,12 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 
 	resourceUpload.Begin();
 
+	hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample.png", m_texture.GetAddressOf(), false);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create wic texture from file.");
+		exit(-1);
+	}
 	//spriteFont = std::make_unique<DirectX::SpriteFont>(device.Get(), resourceUpload, L"Data\\Fonts\\comic_sans_ms_16.spritefont", textHeap->GetCPUDescriptorHandleForHeapStart(), textHeap->GetGPUDescriptorHandleForHeapStart());
 
 	//DirectX::RenderTargetState rtState(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D32_FLOAT);
@@ -289,7 +295,7 @@ void Graphics::CreateDescriptorHeaps()
 	}
 
 	// Describe and create a shader resource view (SRV) heap for the texture.
-	/*D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	srvHeapDesc.NumDescriptors = 1;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -299,7 +305,7 @@ void Graphics::CreateDescriptorHeaps()
 	{
 		ErrorLogger::Log(hr, "Failed to create SRV Heap");
 		exit(-1);
-	}*/
+	}
 
 	// Describe and create a sprite font descriptor heap.
 	/*D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
@@ -336,6 +342,7 @@ void Graphics::Load(int width, int height)
 	CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
 	rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
+	//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 	//Create static sampler desc
 	D3D12_STATIC_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -422,7 +429,7 @@ void Graphics::Load(int width, int height)
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 
-	//DepthStencil https://www.youtube.com/watch?v=yhwg_O5HBwQ
+	//DepthStencil
 	D3D12_DEPTH_STENCIL_DESC depth_stencilDesc;
 	ZeroMemory(&depth_stencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
 	depth_stencilDesc.DepthEnable = TRUE;
@@ -502,81 +509,19 @@ void Graphics::Load(int width, int height)
 	m_vertexBufferView.SizeInBytes = vertexBufferSize;
 	//----------------
 
-	// Note: ComPtr's are CPU objects but this resource needs to stay in scope until
-	// the command list that references it has finished executing on the GPU.
-	// We will flush the GPU at the end of this method to ensure the resource is not
-	// prematurely destroyed.
-
-	// Describe and create a Texture2D.
-	/*D3D12_RESOURCE_DESC textureDesc = {};
-	textureDesc.MipLevels = 1;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.Width = 256;
-	textureDesc.Height = 256;
-	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	textureDesc.DepthOrArraySize = 1;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-	hr = device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&textureDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		__uuidof(ID3D12Resource),
-		(void**)texture.GetAddressOf()
-	);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create Texture Buffer");
-	}
-
-	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 1);
-
-	//Create the GPU upload buffer
-	hr = device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		__uuidof(ID3D12Resource),
-		(void**)textureUploadHeap.GetAddressOf()
-	);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create upload buffer.");
-	}
-
-	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the Texture2D.
-	std::vector<UINT8> texture_data = GenerateTextureData();
-
-	D3D12_SUBRESOURCE_DATA textureData = {};
-	textureData.pData = &texture_data[0];
-	textureData.RowPitch = 256 * 4;
-	textureData.SlicePitch = textureData.RowPitch * 256;
-
-	UpdateSubresources(command_list.Get(), texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
 	// Describe and create a SRV for the texture.
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = textureDesc.Format;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());*/
-
+	device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
 	// Close the command list and execute it to begin the initial GPU setup.
 	hr = command_list->Close();
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to close command list to begin GPU setup.");
 	}
-	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
-	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	//Create depth stencil view
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -685,8 +630,10 @@ void Graphics::Load(int width, int height)
 
 	// Set necessary state.
 	command_list->SetGraphicsRootSignature(root_signature.Get());
-	/*ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
-	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);*/
+	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
+	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+	command_list->SetGraphicsRootDescriptorTable(0, srvHeap->GetGPUDescriptorHandleForHeapStart());
 	command_list->RSSetViewports(1, &m_viewport);
 	command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -708,6 +655,7 @@ void Graphics::Load(int width, int height)
 	command_list->DrawInstanced(6, 1, 0, 0);
 
 	//Draw text
+	//TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12
 	/*ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
 	command_list->SetDescriptorHeaps(_countof(heaps), heaps);
 	spriteBatch->Begin(command_list.Get());

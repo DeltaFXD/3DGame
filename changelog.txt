@@ -43,3 +43,4 @@
 -Small refactor
 -Better D3D12 debugging
 -Temp fix mem leak (disable Text rendering TODO: rework)
+-Fix texturing

@@ -8,6 +8,8 @@
 #include "DescriptorHeap.h"
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
+#include <WICTextureLoader.h>
+#include <DirectXHelpers.h>
 
 class Graphics
 {
@@ -31,12 +33,13 @@ private:
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
 	//wrl::ComPtr<ID3D12Resource> texture;
+	wrl::ComPtr<ID3D12Resource> m_texture;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
 	//wrl::ComPtr<ID3D12Resource> textureUploadHeap;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
-	//wrl::ComPtr<ID3D12DescriptorHeap> srvHeap;
+	wrl::ComPtr<ID3D12DescriptorHeap> srvHeap;
 	//wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
 
 	//Debug mode
