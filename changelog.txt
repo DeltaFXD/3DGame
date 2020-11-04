@@ -45,3 +45,5 @@
 -Temp fix mem leak (disable Text rendering TODO: rework)
 -Fix texturing
 -Implement index buffer
+#2020.11.04
+-Better buffer useage

@@ -17,8 +17,9 @@ public:
 	void Render();
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
+	void InitializeScene(int width, int height);
 	void CreateDescriptorHeaps();
-	void Load(int width, int height);
+	void InitPipelineState(int width, int height);
 	void WaitForPreviousFrame();
 	void PopulateCommandList();
 

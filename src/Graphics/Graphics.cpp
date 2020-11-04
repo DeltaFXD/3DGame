@@ -22,7 +22,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 		return false;
 	}
 
-	Load(width, height);
+	InitPipelineState(width, height);
 
 	return true;
 }
@@ -321,7 +321,7 @@ void Graphics::CreateDescriptorHeaps()
 	}*/
 }
 
-void Graphics::Load(int width, int height)
+void Graphics::InitPipelineState(int width, int height)
 {
 	HRESULT hr;
 	//Create root signature
@@ -466,139 +466,176 @@ void Graphics::Load(int width, int height)
 		exit(-1);
 	}
 
-	//------------triangle
-	Vertex square[] =
-	{
-		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
-		Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left		-	[1]
-		Vertex( 0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right		-	[2]
-		Vertex( 0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
-	};
+	//Prepare scene
+	InitializeScene(width, height);
+ }
 
-	DWORD indices[] =
-	{
-		0, 1, 2,
-		0, 2, 3
-	};
+ void Graphics::InitializeScene(int width, int height)
+ {
+	 wrl::ComPtr<ID3D12Resource> vertexBufferUploadHeap;
+	 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
 
-	const UINT vertexBufferSize = sizeof(square);
-	const UINT indexBufferSize = sizeof(indices);
+	 HRESULT hr;
 
-	// Note: using upload heaps to transfer static data like vert buffers is not 
-	// recommended. Every time the GPU needs it, the upload heap will be marshalled 
-	// over. Please read up on Default Heap usage. An upload heap is used here for 
-	// code simplicity and because there are very few verts to actually transfer.
-	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create VertexBuffer.");
-		exit(-1);
-	}
+	 Vertex square[] =
+	 {
+		 Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
+		 Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left		-	[1]
+		 Vertex(0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right		-	[2]
+		 Vertex(0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
+	 };
 
-	// Copy the triangle data to the vertex buffer.
-	UINT8* pVertexDataBegin;
-	CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-	hr = vertex_buffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to map VertexBuffer.");
-		exit(-1);
-	}
-	memcpy(pVertexDataBegin, square, sizeof(square));
-	vertex_buffer->Unmap(0, nullptr);
+	 DWORD indices[] =
+	 {
+		 0, 1, 2,
+		 0, 2, 3
+	 };
 
-	// Initialize the vertex buffer view.
-	m_vertexBufferView.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
-	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-	m_vertexBufferView.SizeInBytes = vertexBufferSize;
-	//----------------
+	 const UINT vertexBufferSize = sizeof(square);
+	 const UINT indexBufferSize = sizeof(indices);
 
-	hr = device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE, &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, __uuidof(ID3D12Resource), (void**)index_buffer.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create IndexBuffer.");
-		exit(-1);
-	}
-	//Copy index data to buffer.
-	UINT* pIndexDataBegin;
-	CD3DX12_RANGE readRange2(0, 0);
-	hr = index_buffer->Map(0, &readRange2, reinterpret_cast<void**>(&pIndexDataBegin));
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to map IndexBuffer.");
-		exit(-1);
-	}
-	memcpy(pIndexDataBegin, indices, sizeof(indices));
-	index_buffer->Unmap(0, nullptr);
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		 D3D12_RESOURCE_STATE_COPY_DEST,
+		 nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer.GetAddressOf());
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create VertexBuffer.");
+		 exit(-1);
+	 }
 
-	//Initialize the index buffer view
-	m_indexBufferView.BufferLocation = index_buffer->GetGPUVirtualAddress();
-	m_indexBufferView.SizeInBytes = indexBufferSize;
-	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+		 D3D12_RESOURCE_STATE_GENERIC_READ,
+		 nullptr, __uuidof(ID3D12Resource), (void**)vertexBufferUploadHeap.GetAddressOf());
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create upload buffer for vertecies.");
+		 exit(-1);
+	 }
 
-	// Describe and create a SRV for the texture.
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
-	// Close the command list and execute it to begin the initial GPU setup.
-	hr = command_list->Close();
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to close command list to begin GPU setup.");
-	}
+	 // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
+	 D3D12_SUBRESOURCE_DATA vertexData = {};
+	 vertexData.pData = square;
+	 vertexData.RowPitch = vertexBufferSize;
+	 vertexData.SlicePitch = vertexBufferSize;
 
-	//Create depth stencil view
-	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+	 UpdateSubresources<1>(command_list.Get(), vertex_buffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
+	 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
-	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-	depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+	 // Initialize the vertex buffer view.
+	 m_vertexBufferView.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
+	 m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+	 m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
-	hr = device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthOptimizedClearValue,
-		__uuidof(ID3D12Resource),
-		(void**)depth_stencil.GetAddressOf()
-	);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create Stencil Buffer");
-		exit(-1);
-	}
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
+		 D3D12_RESOURCE_STATE_COPY_DEST,
+		 nullptr, __uuidof(ID3D12Resource), (void**)index_buffer.GetAddressOf());
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create IndexBuffer.");
+		 exit(-1);
+	 }
 
-	device->CreateDepthStencilView(depth_stencil.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
+		 D3D12_RESOURCE_STATE_GENERIC_READ,
+		 nullptr, __uuidof(ID3D12Resource), (void**)indexBufferUploadHeap.GetAddressOf());
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create IndexBuffer.");
+		 exit(-1);
+	 }
 
-	// Create synchronization objects and wait until assets have been uploaded to the GPU.
-	hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create synchronization object.");
-		exit(-1);
-	}
-	m_fenceValue = 1;
+	 // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the index buffer.
+	 D3D12_SUBRESOURCE_DATA indexData = {};
+	 indexData.pData = indices;
+	 indexData.RowPitch = indexBufferSize;
+	 indexData.SlicePitch = indexBufferSize;
 
-	// Create an event handle to use for frame synchronization.
-	m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-	if (m_fenceEvent == nullptr)
-	{
-		ErrorLogger::Log(GetLastError(), "Failed to create event handle.");
-		exit(-1);
-	}
+	 UpdateSubresources<1>(command_list.Get(), index_buffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
+	 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
-	// Wait for the command list to execute; we are reusing the same command 
-	// list in our main loop but for now, we just want to wait for setup to 
-	// complete before continuing.
-	WaitForPreviousFrame();
+	 //Initialize the index buffer view
+	 m_indexBufferView.BufferLocation = index_buffer->GetGPUVirtualAddress();
+	 m_indexBufferView.SizeInBytes = indexBufferSize;
+	 m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+	 // Describe and create a SRV for the texture.
+	 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	 srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	 srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	 srvDesc.Texture2D.MipLevels = 1;
+	 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	 //Create depth stencil view
+	 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	 depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	 depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	 depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	 D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	 depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	 depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	 depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		 D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		 &depthOptimizedClearValue,
+		 __uuidof(ID3D12Resource),
+		 (void**)depth_stencil.GetAddressOf()
+	 );
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create Stencil Buffer");
+		 exit(-1);
+	 }
+
+	 device->CreateDepthStencilView(depth_stencil.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	 // Close the command list and execute it to begin the initial GPU setup.
+	 hr = command_list->Close();
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to close command list to begin GPU setup.");
+	 }
+	 ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
+	 command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+	 // Create synchronization objects and wait until assets have been uploaded to the GPU.
+	 hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create synchronization object.");
+		 exit(-1);
+	 }
+	 m_fenceValue = 1;
+
+	 // Create an event handle to use for frame synchronization.
+	 m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	 if (m_fenceEvent == nullptr)
+	 {
+		 ErrorLogger::Log(GetLastError(), "Failed to create event handle.");
+		 exit(-1);
+	 }
+
+	 // Wait for the command list to execute; we are reusing the same command 
+	 // list in our main loop but for now, we just want to wait for setup to 
+	 // complete before continuing.
+	 WaitForPreviousFrame();
  }
 
  void Graphics::WaitForPreviousFrame()
