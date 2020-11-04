@@ -17,6 +17,9 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	m_scissorRect.right = static_cast<LONG>(width);
 	m_scissorRect.bottom = static_cast<LONG>(height);
 
+	constantBufferData.xOffset = 0.0f;
+	constantBufferData.yOffset = 0.0f;
+
 	if (!InitializeDirectX(hwnd, width, height))
 	{
 		return false;
@@ -47,6 +50,14 @@ void Graphics::Render()
 	}
 
 	WaitForPreviousFrame();
+}
+
+void Graphics::Update()
+{
+	constantBufferData.xOffset = 0.0f;
+	constantBufferData.yOffset += 0.0001f;
+
+	memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
@@ -200,6 +211,7 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	CreateDescriptorHeaps();
 
 	m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_cbvsrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//Create frame resources
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -294,31 +306,19 @@ void Graphics::CreateDescriptorHeaps()
 		exit(-1);
 	}
 
-	// Describe and create a shader resource view (SRV) heap for the texture.
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
+	// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
+	D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc = {};
+	cbvsrvHeapDesc.NumDescriptors = 2; //SRV + CBV
+	cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-	hr = device->CreateDescriptorHeap(&srvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)srvHeap.GetAddressOf());
+	hr = device->CreateDescriptorHeap(&cbvsrvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)cbvsrvHeap.GetAddressOf());
 	if (FAILED(hr))
 	{
-		ErrorLogger::Log(hr, "Failed to create SRV Heap");
+		ErrorLogger::Log(hr, "Failed to create SRV and CBV Heap");
 		exit(-1);
 	}
-
-	// Describe and create a sprite font descriptor heap.
-	/*D3D12_DESCRIPTOR_HEAP_DESC sfHeapDesc = {};
-	sfHeapDesc.NumDescriptors = 1;
-	sfHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	sfHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-	hr = device->CreateDescriptorHeap(&sfHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)textHeap.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to create sprite font Heap");
-		exit(-1);
-	}*/
 }
 
 void Graphics::InitPipelineState(int width, int height)
@@ -336,11 +336,13 @@ void Graphics::InitPipelineState(int width, int height)
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 	}
 
-	CD3DX12_DESCRIPTOR_RANGE1 ranges[1] = {};
+	CD3DX12_DESCRIPTOR_RANGE1 ranges[2] = {};
 	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-	CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
+	CD3DX12_ROOT_PARAMETER1 rootParameters[2] = {};
 	rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_VERTEX);
 
 	//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 	//Create static sampler desc
@@ -493,6 +495,7 @@ void Graphics::InitPipelineState(int width, int height)
 
 	 const UINT vertexBufferSize = sizeof(square);
 	 const UINT indexBufferSize = sizeof(indices);
+	 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256)); // CB size is required to be 256-byte aligned.
 
 	 hr = device->CreateCommittedResource(
 		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -571,12 +574,45 @@ void Graphics::InitPipelineState(int width, int height)
 	 m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
 	 // Describe and create a SRV for the texture.
+	 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
 	 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	 srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	 srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	 srvDesc.Texture2D.MipLevels = 1;
-	 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, srvHeap->GetCPUDescriptorHandleForHeapStart());
+	 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, cbvsrvHandle);
+	 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+	 //Create constant buffer
+	 hr = device->CreateCommittedResource(
+		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		 D3D12_HEAP_FLAG_NONE,
+		 &CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize),
+		 D3D12_RESOURCE_STATE_GENERIC_READ,
+		 nullptr, __uuidof(ID3D12Resource), (void**)constant_buffer.GetAddressOf()
+	 );
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to create ConstantBuffer.");
+		 exit(-1);
+	 }
+
+	 //Describe and create a CBV
+	 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	 cbvDesc.BufferLocation = constant_buffer->GetGPUVirtualAddress();
+	 cbvDesc.SizeInBytes = constantBufferSize;
+	 device->CreateConstantBufferView(&cbvDesc, cbvsrvHandle);
+	 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+	 // Map and initialize the constant buffer. We don't unmap this until the app closes. Keeping things mapped for the lifetime of the resource is okay.
+	 CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+	 hr = constant_buffer->Map(0, &readRange, reinterpret_cast<void**>(&constantBufferDataBegin));
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to map constant buffer.");
+		 exit(-1);
+	 }
+	 memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 
 	 //Create depth stencil view
 	 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -694,10 +730,14 @@ void Graphics::InitPipelineState(int width, int height)
 
 	// Set necessary state.
 	command_list->SetGraphicsRootSignature(root_signature.Get());
-	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { cbvsrvHeap.Get() };
 	command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	command_list->SetGraphicsRootDescriptorTable(0, srvHeap->GetGPUDescriptorHandleForHeapStart());
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
+	command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
+	cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+	command_list->SetGraphicsRootDescriptorTable(1, cbvsrvHandle);
+	cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 	command_list->RSSetViewports(1, &m_viewport);
 	command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -714,6 +754,7 @@ void Graphics::InitPipelineState(int width, int height)
 	command_list->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	command_list->IASetIndexBuffer(&m_indexBufferView);

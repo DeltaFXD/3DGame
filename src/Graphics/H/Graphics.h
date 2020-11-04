@@ -3,6 +3,7 @@
 #include "Graphics/H/Shaders.h"
 #include <d3dx12.h>
 #include "Graphics/H/Vertex.h"
+#include "Graphics/H/ConstantBufferTypes.h"
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 #include "DescriptorHeap.h"
@@ -15,6 +16,7 @@ class Graphics
 public:
 	bool Initialize(HWND hwnd, int width, int height);
 	void Render();
+	void Update();
 private:
 	bool InitializeDirectX(HWND hwnd, int width, int height);
 	void InitializeScene(int width, int height);
@@ -39,7 +41,7 @@ private:
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
-	wrl::ComPtr<ID3D12DescriptorHeap> srvHeap;
+	wrl::ComPtr<ID3D12DescriptorHeap> cbvsrvHeap;
 	//wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
 
 	//Debug mode
@@ -47,6 +49,7 @@ private:
 	wrl::ComPtr<ID3D12InfoQueue> info;
 #endif
 	UINT m_rtvDescriptorSize;
+	UINT m_cbvsrvDescriptorSize;
 
 	D3D12_VIEWPORT m_viewport;
 	D3D12_RECT m_scissorRect;
@@ -54,6 +57,9 @@ private:
 	//Shaders
 	wrl::ComPtr<ID3D12Resource> vertex_buffer;
 	wrl::ComPtr<ID3D12Resource> index_buffer;
+	wrl::ComPtr<ID3D12Resource> constant_buffer;
+	CB_VS_vertexshader constantBufferData;
+	UINT8* constantBufferDataBegin;
 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;

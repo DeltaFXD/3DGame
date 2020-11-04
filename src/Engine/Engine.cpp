@@ -74,6 +74,7 @@ void Engine::Update()
 			OutputDebugStringA(outmsg.c_str());*/
 		}
 	}
+	gfx.Update();
 }
 
 void Engine::Render()

@@ -41,6 +41,7 @@
     <ClInclude Include="src\Engine\H\Engine.h" />
     <ClInclude Include="src\Engine\H\WindowContainer.h" />
     <ClInclude Include="src\Graphics\H\AdapterReader.h" />
+    <ClInclude Include="src\Graphics\H\ConstantBufferTypes.h" />
     <ClInclude Include="src\Graphics\H\Graphics.h" />
     <ClInclude Include="src\Graphics\H\Shaders.h" />
     <ClInclude Include="src\Graphics\H\Vertex.h" />
