@@ -17,21 +17,29 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	m_scissorRect.right = static_cast<LONG>(width);
 	m_scissorRect.bottom = static_cast<LONG>(height);
 
-	constantBufferData.xOffset = 0.0f;
-	constantBufferData.yOffset = 0.0f;
+	constantBufferData.mat = DirectX::XMMatrixIdentity();
 
-	if (!InitializeDirectX(hwnd, width, height))
+	wWidth = width;
+	wHeight = height;
+
+	if (!InitializeDirectX(hwnd))
 	{
 		return false;
 	}
 
-	InitPipelineState(width, height);
+	InitPipelineState();
 
 	return true;
 }
 
 void Graphics::Render()
 {
+	XMMATRIX world = XMMatrixIdentity();
+
+	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
+	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
+
+	memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
 
@@ -54,13 +62,10 @@ void Graphics::Render()
 
 void Graphics::Update()
 {
-	constantBufferData.xOffset = 0.0f;
-	constantBufferData.yOffset += 0.0001f;
-
-	memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+	camera.AdjustPosition(0.0f, 0.0f, -0.1f);
 }
 
-bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
+bool Graphics::InitializeDirectX(HWND hwnd)
 {
 #pragma region D3Debug
 	if (IsDebuggerPresent() == TRUE)
@@ -143,8 +148,8 @@ bool Graphics::InitializeDirectX(HWND hwnd, int width, int height)
 	DXGI_SWAP_CHAIN_DESC1 scd = {};
 	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC1));
 
-	scd.Width = width;
-	scd.Height = height;
+	scd.Width = wWidth;
+	scd.Height = wHeight;
 	scd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.Stereo = FALSE;
 	//Supported by every device
@@ -321,7 +326,7 @@ void Graphics::CreateDescriptorHeaps()
 	}
 }
 
-void Graphics::InitPipelineState(int width, int height)
+void Graphics::InitPipelineState()
 {
 	HRESULT hr;
 	//Create root signature
@@ -469,10 +474,10 @@ void Graphics::InitPipelineState(int width, int height)
 	}
 
 	//Prepare scene
-	InitializeScene(width, height);
+	InitializeScene();
  }
 
- void Graphics::InitializeScene(int width, int height)
+ void Graphics::InitializeScene()
  {
 	 wrl::ComPtr<ID3D12Resource> vertexBufferUploadHeap;
 	 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
@@ -481,10 +486,10 @@ void Graphics::InitPipelineState(int width, int height)
 
 	 Vertex square[] =
 	 {
-		 Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
-		 Vertex(-0.5f,  0.5f, 1.0f, 0.0f, 0.0f), //Top Left		-	[1]
-		 Vertex(0.5f,  0.5f, 1.0f, 1.0f, 0.0f), //Top Right		-	[2]
-		 Vertex(0.5f, -0.5f, 1.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
+		 Vertex(-0.5f, -0.5f, 0.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
+		 Vertex(-0.5f,  0.5f, 0.0f, 0.0f, 0.0f), //Top Left		-	[1]
+		 Vertex( 0.5f,  0.5f, 0.0f, 1.0f, 0.0f), //Top Right	-	[2]
+		 Vertex( 0.5f, -0.5f, 0.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
 	 };
 
 	 DWORD indices[] =
@@ -628,7 +633,7 @@ void Graphics::InitPipelineState(int width, int height)
 	 hr = device->CreateCommittedResource(
 		 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		 D3D12_HEAP_FLAG_NONE,
-		 &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		 &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, wWidth, wHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
 		 D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		 &depthOptimizedClearValue,
 		 __uuidof(ID3D12Resource),
@@ -672,6 +677,9 @@ void Graphics::InitPipelineState(int width, int height)
 	 // list in our main loop but for now, we just want to wait for setup to 
 	 // complete before continuing.
 	 WaitForPreviousFrame();
+
+	 camera.SetPosition(0.0f, 0.0f, -2.0f);
+	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
  }
 
  void Graphics::WaitForPreviousFrame()

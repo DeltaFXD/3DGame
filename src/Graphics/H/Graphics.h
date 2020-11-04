@@ -10,6 +10,7 @@
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
+#include "Graphics/H/Camera.h"
 
 class Graphics
 {
@@ -18,10 +19,10 @@ public:
 	void Render();
 	void Update();
 private:
-	bool InitializeDirectX(HWND hwnd, int width, int height);
-	void InitializeScene(int width, int height);
+	bool InitializeDirectX(HWND hwnd);
+	void InitializeScene();
 	void CreateDescriptorHeaps();
-	void InitPipelineState(int width, int height);
+	void InitPipelineState();
 	void WaitForPreviousFrame();
 	void PopulateCommandList();
 
@@ -55,9 +56,9 @@ private:
 	D3D12_RECT m_scissorRect;
 
 	//Shaders
-	wrl::ComPtr<ID3D12Resource> vertex_buffer;
-	wrl::ComPtr<ID3D12Resource> index_buffer;
-	wrl::ComPtr<ID3D12Resource> constant_buffer;
+	wrl::ComPtr<ID3D12Resource> vertex_buffer;		//TODO: wrap vertex buffer
+	wrl::ComPtr<ID3D12Resource> index_buffer;		//TODO: wrap index buffer
+	wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
 	UINT8* constantBufferDataBegin;
 
@@ -77,4 +78,8 @@ private:
 	/*std::unique_ptr<DirectX::DescriptorHeap> spriteHeap;
 	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
 	std::unique_ptr<DirectX::SpriteFont> spriteFont;*/
+	int wWidth = 0;
+	int wHeight = 0;
+
+	Camera camera;
 };
