@@ -62,7 +62,7 @@ void Graphics::Render()
 
 void Graphics::Update()
 {
-	camera.AdjustPosition(0.0f, 0.0f, -0.1f);
+	
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd)
@@ -486,16 +486,27 @@ void Graphics::InitPipelineState()
 
 	 Vertex square[] =
 	 {
-		 Vertex(-0.5f, -0.5f, 0.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
-		 Vertex(-0.5f,  0.5f, 0.0f, 0.0f, 0.0f), //Top Left		-	[1]
-		 Vertex( 0.5f,  0.5f, 0.0f, 1.0f, 0.0f), //Top Right	-	[2]
-		 Vertex( 0.5f, -0.5f, 0.0f, 1.0f, 1.0f)  //Bottom Right	-	[3]
+		 Vertex(-0.5f, -0.5f, 20.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
+		 Vertex(-0.5f,  0.5f, 20.0f, 0.0f, 0.0f), //Top Left	-	[1]
+		 Vertex( 0.5f,  0.5f, 20.0f, 1.0f, 0.0f), //Top Right	-	[2]
+		 Vertex( 0.5f, -0.5f, 20.0f, 1.0f, 1.0f), //Bottom Right-	[3]
+
+		 Vertex(-0.5f, -0.5f, 21.0f, 0.0f, 0.0f), //Bottom LeftB-	[4]
+		 Vertex(-0.5f,  0.5f, 21.0f, 0.0f, 1.0f), //Top LeftB	-	[5]
+		 Vertex( 0.5f,  0.5f, 21.0f, 1.0f, 1.0f), //Top RightB	-	[6]
+		 Vertex( 0.5f, -0.5f, 21.0f, 1.0f, 0.0f)  //Bottom RightB-	[7]
 	 };
 
 	 DWORD indices[] =
 	 {
 		 0, 1, 2,
-		 0, 2, 3
+		 0, 2, 3,
+		 3, 2, 6,
+		 3, 6, 7,
+		 4, 5, 1,
+		 4, 1, 0,
+		 1, 5, 6,
+		 1, 6, 2
 	 };
 
 	 const UINT vertexBufferSize = sizeof(square);
@@ -766,7 +777,7 @@ void Graphics::InitPipelineState()
 	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	command_list->IASetIndexBuffer(&m_indexBufferView);
-	command_list->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	command_list->DrawIndexedInstanced(24, 1, 0, 0, 0);
 
 	//Draw text
 	//TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

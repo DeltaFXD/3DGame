@@ -18,6 +18,7 @@ public:
 	bool Initialize(HWND hwnd, int width, int height);
 	void Render();
 	void Update();
+	Camera camera;
 private:
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
@@ -80,6 +81,4 @@ private:
 	std::unique_ptr<DirectX::SpriteFont> spriteFont;*/
 	int wWidth = 0;
 	int wHeight = 0;
-
-	Camera camera;
 };

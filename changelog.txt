@@ -49,3 +49,5 @@
 -Better buffer useage
 -Implement constant buffer
 -Implement camera
+#2020.11.05
+-Improve camera & moving camera

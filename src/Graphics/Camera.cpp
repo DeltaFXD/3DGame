@@ -105,6 +105,53 @@ void Camera::AdjustRotation(float x, float y, float z)
 	UpdateViewMatrix();
 }
 
+void Camera::SetLookAtPosition(XMFLOAT3 lookAtPos)
+{
+	//Camera cannot look at the same position as it is in
+	if (lookAtPos.x == pos.x && lookAtPos.y == pos.y && lookAtPos.z == pos.z)
+		return;
+
+	lookAtPos.x = pos.x - lookAtPos.x;
+	lookAtPos.y = pos.y - lookAtPos.y;
+	lookAtPos.z = pos.z - lookAtPos.z;
+
+	float pitch = 0.0f;
+	if (lookAtPos.y != 0.0f)
+	{
+		const float distance = sqrtf(lookAtPos.x * lookAtPos.x + lookAtPos.z * lookAtPos.z);
+		pitch = atanf(lookAtPos.y / distance);
+	}
+	float yaw = 0.0f;
+	if (lookAtPos.x != 0.0f)
+	{
+		yaw = atanf(lookAtPos.x / lookAtPos.z);
+	}
+	if (lookAtPos.z > 0)
+		yaw += XM_PI;
+
+	SetRotation(pitch, yaw, 0.0f);
+}
+
+const XMVECTOR& Camera::GetForwardVector()
+{
+	return vec_forward;
+}
+
+const XMVECTOR& Camera::GetRightVector()
+{
+	return vec_right;
+}
+
+const XMVECTOR& Camera::GetLeftVector()
+{
+	return vec_left;
+}
+
+const XMVECTOR& Camera::GetBackwardVector()
+{
+	return vec_backward;
+}
+
 void Camera::UpdateViewMatrix()
 {
 	//Calculate rotation matrix
@@ -117,4 +164,10 @@ void Camera::UpdateViewMatrix()
 	XMVECTOR upDirection = XMVector3TransformCoord(DEFAULT_UP_VECTOR, camRotationM);
 	//Rebuild view matrix
 	viewMatrix = XMMatrixLookAtLH(posVector, camTarget, upDirection);
+
+	XMMATRIX vecRotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, rot.y, 0.0f);
+	vec_forward = XMVector3TransformCoord(DEFAULT_FORWARD_VECTOR, vecRotationMatrix);
+	vec_backward = XMVector3TransformCoord(DEFAULT_BACKWARD_VECTOR, vecRotationMatrix);
+	vec_left = XMVector3TransformCoord(DEFAULT_LEFT_VECTOR, vecRotationMatrix);
+	vec_right = XMVector3TransformCoord(DEFAULT_RIGHT_VECTOR, vecRotationMatrix);
 }
