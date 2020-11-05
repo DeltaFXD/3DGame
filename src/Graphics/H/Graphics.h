@@ -11,6 +11,7 @@
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
 #include "Graphics/H/Camera.h"
+#include "Utility/H/Timer.h"
 
 class Graphics
 {
@@ -81,4 +82,5 @@ private:
 	std::unique_ptr<DirectX::SpriteFont> spriteFont;*/
 	int wWidth = 0;
 	int wHeight = 0;
+	Timer fpsTimer;
 };

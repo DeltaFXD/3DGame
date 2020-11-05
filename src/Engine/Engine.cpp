@@ -2,6 +2,7 @@
 
 bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height)
 {
+	timer.Start();
 	if (!this->render_window.Initialize(this, hInstance, window_title, window_class, width, height))
 	{
 		return false;
@@ -22,6 +23,8 @@ bool Engine::ProcessMessages()
 
 void Engine::Update()
 {
+	float delta = timer.GetMilisecondsElapsed();
+	timer.Restart();
 	while (!keyboard.CharBufferIsEmpty())
 	{
 		unsigned char c = keyboard.ReadChar();
@@ -54,7 +57,7 @@ void Engine::Update()
 		{
 			if (e.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
-				gfx.camera.AdjustRotation((float)e.GetPosY() * 0.001f, (float)e.GetPosX() * 0.001f, 0.0f);
+				gfx.camera.AdjustRotation((float)e.GetPosY() * 0.001f * delta, (float)e.GetPosX() * 0.001f * delta, 0.0f);
 			}
 		}
 	}
@@ -62,27 +65,27 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed('W'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetForwardVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(gfx.camera.GetForwardVector() * cameraSpeed * delta);
 	}
 	if (keyboard.KeyIsPressed('S'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetBackwardVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(gfx.camera.GetBackwardVector() * cameraSpeed * delta);
 	}
 	if (keyboard.KeyIsPressed('A'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetLeftVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(gfx.camera.GetLeftVector() * cameraSpeed * delta);
 	}
 	if (keyboard.KeyIsPressed('D'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetRightVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(gfx.camera.GetRightVector() * cameraSpeed * delta);
 	}
 	if (keyboard.KeyIsPressed(VK_SPACE))
 	{
-		gfx.camera.AdjustPosition(0.0f, cameraSpeed, 0.0f);
+		gfx.camera.AdjustPosition(0.0f, cameraSpeed * delta, 0.0f);
 	}
 	if (keyboard.KeyIsPressed('X'))
 	{
-		gfx.camera.AdjustPosition(0.0f, -cameraSpeed, 0.0f);
+		gfx.camera.AdjustPosition(0.0f, -cameraSpeed * delta, 0.0f);
 	}
 
 	gfx.Update();

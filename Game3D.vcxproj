@@ -34,6 +34,7 @@
     <ClCompile Include="src\Utility\Config.cpp" />
     <ClCompile Include="src\Utility\ErrorLogger.cpp" />
     <ClCompile Include="src\Utility\StringConverter.cpp" />
+    <ClCompile Include="src\Utility\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -55,6 +56,7 @@
     <ClInclude Include="src\Utility\H\Config.h" />
     <ClInclude Include="src\Utility\H\ErrorLogger.h" />
     <ClInclude Include="src\Utility\H\StringConverter.h" />
+    <ClInclude Include="src\Utility\H\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="pixelshader.hlsl">
