@@ -60,7 +60,7 @@ void Graphics::Render()
 	}
 	// Present the frame.
 	HRESULT hr;
-	hr = swapchain->Present(0, 0);
+	hr = swapchain->Present(1, 0);
 	if (FAILED(hr))
 	{
 		hr = device->GetDeviceRemovedReason();
@@ -497,7 +497,7 @@ void Graphics::InitPipelineState()
 
 	 Vertex square[] =
 	 {
-		 Vertex(-0.5f, -0.5f, 20.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
+		 /*Vertex(-0.5f, -0.5f, 20.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
 		 Vertex(-0.5f,  0.5f, 20.0f, 0.0f, 0.0f), //Top Left	-	[1]
 		 Vertex( 0.5f,  0.5f, 20.0f, 1.0f, 0.0f), //Top Right	-	[2]
 		 Vertex( 0.5f, -0.5f, 20.0f, 1.0f, 1.0f), //Bottom Right-	[3]
@@ -505,19 +505,77 @@ void Graphics::InitPipelineState()
 		 Vertex(-0.5f, -0.5f, 21.0f, 0.0f, 0.0f), //Bottom LeftB-	[4]
 		 Vertex(-0.5f,  0.5f, 21.0f, 0.0f, 1.0f), //Top LeftB	-	[5]
 		 Vertex( 0.5f,  0.5f, 21.0f, 1.0f, 1.0f), //Top RightB	-	[6]
-		 Vertex( 0.5f, -0.5f, 21.0f, 1.0f, 0.0f)  //Bottom RightB-	[7]
+		 Vertex( 0.5f, -0.5f, 21.0f, 1.0f, 0.0f)  //Bottom RightB-	[7]*/
+		 Vertex(-2.0f, 0.0f,-2.0f, 0.0f, 0.0f), //0
+		 Vertex(-1.0f, 0.0f,-2.0f, 1.0f, 0.0f), //1
+		 Vertex( 0.0f, 0.0f,-2.0f, 0.0f, 0.0f), //2
+		 Vertex( 1.0f, 0.0f,-2.0f, 1.0f, 0.0f), //3
+		 Vertex( 2.0f, 0.0f,-2.0f, 0.0f, 0.0f), //4
+		 Vertex(-2.0f, 0.0f,-1.0f, 0.0f, 1.0f), //5
+		 Vertex(-1.0f, 0.0f,-1.0f, 1.0f, 1.0f), //6
+		 Vertex( 0.0f, 0.0f,-1.0f, 0.0f, 1.0f), //7
+		 Vertex( 1.0f, 0.0f,-1.0f, 1.0f, 1.0f), //8
+		 Vertex( 2.0f, 0.0f,-1.0f, 0.0f, 1.0f), //9
+		 Vertex(-2.0f, 0.0f, 0.0f, 0.0f, 0.0f), //10
+		 Vertex(-1.0f, 0.0f, 0.0f, 1.0f, 0.0f), //11
+		 Vertex( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), //12
+		 Vertex( 1.0f, 0.0f, 0.0f, 1.0f, 0.0f), //13
+		 Vertex( 2.0f, 0.0f, 0.0f, 0.0f, 0.0f), //14
+		 Vertex(-2.0f, 0.0f, 1.0f, 0.0f, 1.0f), //15
+		 Vertex(-1.0f, 0.0f, 1.0f, 1.0f, 1.0f), //16
+		 Vertex( 0.0f, 0.0f, 1.0f, 0.0f, 1.0f), //17
+		 Vertex( 1.0f, 0.0f, 1.0f, 1.0f, 1.0f), //18
+		 Vertex( 2.0f, 0.0f, 1.0f, 0.0f, 1.0f), //19
+		 Vertex(-2.0f, 1.0f, 2.0f, 0.0f, 0.0f), //20
+		 Vertex(-1.0f, 0.5f, 2.0f, 1.0f, 0.0f), //21
+		 Vertex( 0.0f, 0.0f, 2.0f, 0.0f, 0.0f), //22
+		 Vertex( 1.0f, 0.0f, 2.0f, 1.0f, 0.0f), //23
+		 Vertex( 2.0f, 0.0f, 2.0f, 0.0f, 0.0f)  //24
 	 };
 
 	 DWORD indices[] =
 	 {
-		 0, 1, 2,
+		 /*0, 1, 2,
 		 0, 2, 3,
 		 3, 2, 6,
 		 3, 6, 7,
 		 4, 5, 1,
 		 4, 1, 0,
 		 1, 5, 6,
-		 1, 6, 2
+		 1, 6, 2*/
+		 0,5,6,
+		 0,6,1,
+		 1,6,7,
+		 1,7,2,
+		 2,7,8,
+		 2,8,3,
+		 3,8,9,
+		 3,9,4,
+		 5,10,11,
+		 5,11,6,
+		 6,11,12,
+		 6,12,7,
+		 7,12,13,
+		 7,13,8,
+		 8,13,14,
+		 8,14,9,
+
+		 10,15,16,
+		 10,16,11,
+		 11,16,17,
+		 11,17,12,
+		 12,17,18,
+		 12,18,13,
+		 13,18,19,
+		 13,19,14,
+		 15,20,21,
+		 15,21,16,
+		 16,21,22,
+		 16,22,17,
+		 17,22,23,
+		 17,23,18,
+		 18,23,24,
+		 18,24,19
 	 };
 
 	 const UINT vertexBufferSize = sizeof(square);
@@ -700,7 +758,8 @@ void Graphics::InitPipelineState()
 	 // complete before continuing.
 	 WaitForPreviousFrame();
 
-	 camera.SetPosition(0.0f, 0.0f, -2.0f);
+	 camera.SetPosition(30.0f, 30.0f, -30.0f);
+	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
  }
 
@@ -788,7 +847,7 @@ void Graphics::InitPipelineState()
 	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	command_list->IASetIndexBuffer(&m_indexBufferView);
-	command_list->DrawIndexedInstanced(24, 1, 0, 0, 0);
+	command_list->DrawIndexedInstanced(96, 1, 0, 0, 0);
 
 	//Draw text
 	//TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

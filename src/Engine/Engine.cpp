@@ -57,7 +57,7 @@ void Engine::Update()
 		{
 			if (e.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
-				gfx.camera.AdjustRotation((float)e.GetPosY() * 0.001f * delta, (float)e.GetPosX() * 0.001f * delta, 0.0f);
+				gfx.camera.AdjustRotation((float)e.GetPosY() * 0.0001f * delta, (float)e.GetPosX() * 0.0001f * delta, 0.0f);
 			}
 		}
 	}
