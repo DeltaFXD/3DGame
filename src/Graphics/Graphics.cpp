@@ -495,7 +495,7 @@ void Graphics::InitPipelineState()
 
 	 HRESULT hr;
 
-	 Vertex square[] =
+	 Vertex square[289];/* =
 	 {
 		 /*Vertex(-0.5f, -0.5f, 20.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
 		 Vertex(-0.5f,  0.5f, 20.0f, 0.0f, 0.0f), //Top Left	-	[1]
@@ -506,7 +506,7 @@ void Graphics::InitPipelineState()
 		 Vertex(-0.5f,  0.5f, 21.0f, 0.0f, 1.0f), //Top LeftB	-	[5]
 		 Vertex( 0.5f,  0.5f, 21.0f, 1.0f, 1.0f), //Top RightB	-	[6]
 		 Vertex( 0.5f, -0.5f, 21.0f, 1.0f, 0.0f)  //Bottom RightB-	[7]*/
-		 Vertex(-2.0f, 0.0f,-2.0f, 0.0f, 0.0f), //0
+		 /*Vertex(-2.0f, 0.0f,-2.0f, 0.0f, 0.0f), //0
 		 Vertex(-1.0f, 0.0f,-2.0f, 1.0f, 0.0f), //1
 		 Vertex( 0.0f, 0.0f,-2.0f, 0.0f, 0.0f), //2
 		 Vertex( 1.0f, 0.0f,-2.0f, 1.0f, 0.0f), //3
@@ -531,9 +531,42 @@ void Graphics::InitPipelineState()
 		 Vertex( 0.0f, 0.0f, 2.0f, 0.0f, 0.0f), //22
 		 Vertex( 1.0f, 0.0f, 2.0f, 1.0f, 0.0f), //23
 		 Vertex( 2.0f, 0.0f, 2.0f, 0.0f, 0.0f)  //24
-	 };
+	 };*/
+	 float x = -8.0f;
+	 float y = -9.0f;
+	 for (int i = 0; i < 289; i++)
+	 {
+		 if (i % 17 == 0)
+		 {
+			 y += 1.0f;
+			 x = -8.0f;
+		 }
+		 square[i].pos = XMFLOAT3(x, 0.0f, y);
+		 x += 1.0f;
+		 if (i % 2 == 0) {
+			 if ((i / 17) % 2 == 0)
+			 {
+				square[i].texCoord = XMFLOAT2(0.0f, 0.0f);
+			 }
+			 else
+			 {
+				 square[i].texCoord = XMFLOAT2(1.0f, 1.0f);
+			 }
+		 }
+		 else
+		 {
+			 if ((i / 17) % 2 == 0)
+			 {
+				 square[i].texCoord = XMFLOAT2(1.0f, 0.0f);
+			 }
+			 else
+			 {
+				 square[i].texCoord = XMFLOAT2(0.0f, 1.0f);
+			 }
+		 }
+	 }
 
-	 DWORD indices[] =
+	 DWORD indices[1536];/* =
 	 {
 		 /*0, 1, 2,
 		 0, 2, 3,
@@ -543,7 +576,7 @@ void Graphics::InitPipelineState()
 		 4, 1, 0,
 		 1, 5, 6,
 		 1, 6, 2*/
-		 0,5,6,
+		 /*0,5,6,
 		 0,6,1,
 		 1,6,7,
 		 1,7,2,
@@ -576,7 +609,24 @@ void Graphics::InitPipelineState()
 		 17,23,18,
 		 18,23,24,
 		 18,24,19
-	 };
+	 };*/
+	 int z = 0;
+	 int a = 16;
+	 for (int i = 0; z < 1536; i++)
+	 {
+		 if (i != 0 && i % a == 0) {
+			 a += 17;
+			 continue;
+		 }
+		 indices[z] = i;
+		 indices[z + 1] = i + 17;
+		 indices[z + 2] = i + 18;
+
+		 indices[z + 3] = i;
+		 indices[z + 4] = i + 18;
+		 indices[z + 5] = i + 1;
+		 z+=6;
+	 }
 
 	 const UINT vertexBufferSize = sizeof(square);
 	 const UINT indexBufferSize = sizeof(indices);
@@ -847,7 +897,7 @@ void Graphics::InitPipelineState()
 	//Draw triangle
 	command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	command_list->IASetIndexBuffer(&m_indexBufferView);
-	command_list->DrawIndexedInstanced(96, 1, 0, 0, 0);
+	command_list->DrawIndexedInstanced(1536, 1, 0, 0, 0);
 
 	//Draw text
 	//TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12
