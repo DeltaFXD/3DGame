@@ -53,6 +53,7 @@
     <ClInclude Include="src\Input\H\MouseClass.h" />
     <ClInclude Include="src\Input\H\MouseEvent.h" />
     <ClInclude Include="src\Render\H\RenderWindow.h" />
+    <ClInclude Include="src\Utility\H\COMException.h" />
     <ClInclude Include="src\Utility\H\Config.h" />
     <ClInclude Include="src\Utility\H\ErrorLogger.h" />
     <ClInclude Include="src\Utility\H\StringConverter.h" />

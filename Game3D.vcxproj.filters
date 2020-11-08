@@ -149,6 +149,9 @@
     <ClInclude Include="src\Utility\H\Timer.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utility\H\COMException.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
