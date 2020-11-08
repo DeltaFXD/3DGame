@@ -1,4 +1,4 @@
-#include "Input/H/KeyboardEvent.h"
+#include "KeyboardEvent.h"
 
 KeyboardEvent::KeyboardEvent() : type(EventType::Invalid), key(0u)
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Input/H/MouseEvent.h"
+#include "MouseEvent.h"
 #include <queue>
 
 class MouseClass

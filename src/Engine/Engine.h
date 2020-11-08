@@ -1,6 +1,6 @@
 #pragma once
-#include "Engine/H/WindowContainer.h"
-#include "Utility/H/Timer.h"
+#include "WindowContainer.h"
+#include "Utility/Timer.h"
 
 class Engine : WindowContainer{
 

@@ -1,4 +1,4 @@
-#include "Input/H/KeyboardClass.h"
+#include "KeyboardClass.h"
 
 KeyboardClass::KeyboardClass()
 {

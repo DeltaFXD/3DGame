@@ -1,5 +1,5 @@
-#include "Graphics/H/Graphics.h"
-#include "Utility/H/Config.h"
+#include "Graphics.h"
+#include "Utility/Config.h"
 
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
@@ -110,15 +110,13 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		COM_ERROR_IF_FAILED(hr, "Failed to get Info Queue.");
 
 		info->PushEmptyStorageFilter();
-		D3D12_INFO_QUEUE_FILTER_DESC filterDesc;
+		D3D12_INFO_QUEUE_FILTER_DESC filterDesc = { 0 };
 		D3D12_MESSAGE_SEVERITY msList[] = { D3D12_MESSAGE_SEVERITY_INFO };
-		ZeroMemory(&filterDesc, sizeof(filterDesc));
 		filterDesc.NumCategories = 0;
 		filterDesc.pCategoryList = nullptr;
 		filterDesc.NumSeverities = 1;
 		filterDesc.pSeverityList = msList;
-		D3D12_INFO_QUEUE_FILTER filter;
-		ZeroMemory(&filter, sizeof(filter));
+		D3D12_INFO_QUEUE_FILTER filter = { 0 };
 		filter.DenyList = filterDesc;
 		hr = info->AddStorageFilterEntries(&filter);
 		COM_ERROR_IF_FAILED(hr, "Failed to apply InfoQueue filter.");
@@ -133,8 +131,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		COM_ERROR_IF_FAILED(hr, "Failed to create ID3D12CommandQueue.");
 
 		// Describe and create the swap chain.
-		DXGI_SWAP_CHAIN_DESC1 scd = {};
-		ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC1));
+		DXGI_SWAP_CHAIN_DESC1 scd = { 0 };
 
 		scd.Width = wWidth;
 		scd.Height = wHeight;
@@ -153,8 +150,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		//Fullscreen swap chain desc.
-		DXGI_SWAP_CHAIN_FULLSCREEN_DESC scfd = {};
-		ZeroMemory(&scfd, sizeof(DXGI_SWAP_CHAIN_FULLSCREEN_DESC));
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC scfd = { 0 };
 
 		scfd.RefreshRate.Numerator = 60;
 		scfd.RefreshRate.Denominator = 1;
@@ -376,8 +372,7 @@ void Graphics::InitPipelineState()
 		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 
 		//DepthStencil
-		D3D12_DEPTH_STENCIL_DESC depth_stencilDesc;
-		ZeroMemory(&depth_stencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
+		D3D12_DEPTH_STENCIL_DESC depth_stencilDesc = { 0 };
 		depth_stencilDesc.DepthEnable = TRUE;
 		depth_stencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 		depth_stencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;

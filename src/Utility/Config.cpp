@@ -1,4 +1,4 @@
-#include "Utility/H/Config.h"
+#include "Config.h"
 
 UINT Config::BUFFER_FRAME_COUNT = 2; // Minimum 2: front and back buffer
 

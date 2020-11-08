@@ -1,4 +1,4 @@
-#include "Graphics/H/AdapterReader.h"
+#include "AdapterReader.h"
 
 IDXGIAdapter1* AdapterReader::adapter = nullptr;
 

@@ -1,17 +1,17 @@
 #pragma once
-#include "Graphics/H/AdapterReader.h"
-#include "Graphics/H/Shaders.h"
+#include "AdapterReader.h"
+#include "Shaders.h"
 #include <d3dx12.h>
-#include "Graphics/H/Vertex.h"
-#include "Graphics/H/ConstantBufferTypes.h"
+#include "Vertex.h"
+#include "ConstantBufferTypes.h"
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 #include "DescriptorHeap.h"
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
-#include "Graphics/H/Camera.h"
-#include "Utility/H/Timer.h"
+#include "Camera.h"
+#include "Utility/Timer.h"
 
 class Graphics
 {

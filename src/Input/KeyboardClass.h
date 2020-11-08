@@ -1,5 +1,5 @@
 #pragma once
-#include "Input/H/KeyboardEvent.h"
+#include "KeyboardEvent.h"
 #include <queue>
 
 class KeyboardClass {
