@@ -19,13 +19,13 @@ public:
 	bool Initialize(HWND hwnd, int width, int height);
 	void Render();
 	void Update();
+	void Destroy();
 	Camera camera;
 private:
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
 	void CreateDescriptorHeaps();
 	void InitPipelineState();
-	void WaitForPreviousFrame();
 	void PopulateCommandList();
 
 	wrl::ComPtr<ID3D12Device> device;
@@ -37,15 +37,12 @@ private:
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
-	//wrl::ComPtr<ID3D12Resource> texture;
 	wrl::ComPtr<ID3D12Resource> m_texture;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
-	//wrl::ComPtr<ID3D12Resource> textureUploadHeap;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> dsvHeap;
 	wrl::ComPtr<ID3D12DescriptorHeap> cbvsrvHeap;
-	//wrl::ComPtr<ID3D12DescriptorHeap> textHeap;
 
 	//Debug mode
 #ifdef _DEBUG
@@ -73,13 +70,12 @@ private:
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;
 	UINT64 m_fenceValue;
+	UINT64 m_fencePrevValue;
 	HANDLE m_fenceEvent;
 	UINT m_frameIndex;
 
 	std::unique_ptr<DirectX::GraphicsMemory> graphicsMemory;
-	/*std::unique_ptr<DirectX::DescriptorHeap> spriteHeap;
-	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
-	std::unique_ptr<DirectX::SpriteFont> spriteFont;*/
+
 	int wWidth = 0;
 	int wHeight = 0;
 	Timer fpsTimer;

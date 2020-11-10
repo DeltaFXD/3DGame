@@ -98,6 +98,9 @@ LRESULT CALLBACK HandleMsgRedirect(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	switch (uMsg){
 
 	case WM_CLOSE: {
+		//Get ptr to window class
+		WindowContainer* const pWindow = reinterpret_cast<WindowContainer*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+		pWindow->Destroy();
 		DestroyWindow(hwnd);
 		return 0;
 	}

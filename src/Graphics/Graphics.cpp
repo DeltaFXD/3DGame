@@ -35,6 +35,21 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 void Graphics::Render()
 {
+	HRESULT hr;
+
+	// Wait until the previous frame is finished.
+	if (m_fence->GetCompletedValue() < m_fencePrevValue)
+	{
+		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to wait for fence.");
+			exit(-1);
+		}
+
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+
 	XMMATRIX world = XMMatrixIdentity();
 
 	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
@@ -58,8 +73,8 @@ void Graphics::Render()
 		fpsCounter = 0;
 		fpsTimer.Restart();
 	}
+
 	// Present the frame.
-	HRESULT hr;
 	hr = swapchain->Present(1, 0);
 	if (FAILED(hr))
 	{
@@ -68,12 +83,41 @@ void Graphics::Render()
 		exit(-1);
 	}
 
-	WaitForPreviousFrame();
+	m_fencePrevValue = m_fenceValue;
+	//Signal and increment the fence value.
+	hr = command_queue->Signal(m_fence.Get(), m_fenceValue);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to signal.");
+		exit(-1);
+	}
+
+	m_fenceValue++;
+
+	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 }
 
 void Graphics::Update()
 {
-	
+
+}
+
+void Graphics::Destroy()
+{
+	HRESULT hr;
+
+	// Wait until the previous frame is finished.
+	if (m_fence->GetCompletedValue() < m_fencePrevValue)
+	{
+		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to wait for fence.");
+			exit(-1);
+		}
+
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd)
@@ -201,8 +245,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 		graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
 
-		//spriteHeap = std::make_unique<DirectX::DescriptorHeap>(textHeap.Get());
-
 		DirectX::ResourceUploadBatch resourceUpload(device.Get());
 
 		resourceUpload.Begin();
@@ -210,18 +252,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample.png", m_texture.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
 
-		//spriteFont = std::make_unique<DirectX::SpriteFont>(device.Get(), resourceUpload, L"Data\\Fonts\\comic_sans_ms_16.spritefont", textHeap->GetCPUDescriptorHandleForHeapStart(), textHeap->GetGPUDescriptorHandleForHeapStart());
-
-		//DirectX::RenderTargetState rtState(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D32_FLOAT);
-
-		//DirectX::SpriteBatchPipelineStateDescription pd(rtState);
-		//spriteBatch = std::make_unique<DirectX::SpriteBatch>(device.Get(), resourceUpload, pd);
-
 		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
 
 		uploadResourcesFinished.wait();
-
-		//spriteBatch->SetViewport(m_viewport);
 	}
 	catch (COMException& e)
 	{
@@ -410,11 +443,11 @@ void Graphics::InitPipelineState()
 
  void Graphics::InitializeScene()
  {
-		 wrl::ComPtr<ID3D12Resource> vertexBufferUploadHeap;
-		 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
+	 wrl::ComPtr<ID3D12Resource> vertexBufferUploadHeap;
+	 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
 
+	 HRESULT hr;
 	 try {
-		 HRESULT hr;
 
 		 Vertex square[289];/* =
 		 {
@@ -628,7 +661,12 @@ void Graphics::InitPipelineState()
 
 		 // Create an event handle to use for frame synchronization.
 		 m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		 COM_ERROR_IF_FAILED(hr, "Failed to create event handle.");
+		 if (m_fenceEvent == nullptr)
+		 {
+			COM_ERROR_IF_FAILED(GetLastError(), "Failed to create event handle.");
+		 }
+
+		 
 	 }
 	 catch (COMException& e)
 	 {
@@ -638,44 +676,34 @@ void Graphics::InitPipelineState()
 	 // Wait for the command list to execute; we are reusing the same command 
 	 // list in our main loop but for now, we just want to wait for setup to 
 	 // complete before continuing.
-	 WaitForPreviousFrame();
+
+	 //Signal and increment the fence value.
+	 const UINT64 fenceToWaitFor = m_fenceValue;
+	 hr = command_queue->Signal(m_fence.Get(), fenceToWaitFor);
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to signal.");
+	 }
+	 m_fenceValue++;
+
+	 //Wait until the fence is completed.
+	 hr = m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent);
+	 if (FAILED(hr))
+	 {
+		 ErrorLogger::Log(hr, "Failed to wait for fence.");
+		 exit(-1);
+	 }
+	 //Shouldn't ever be a 0
+	 if (m_fenceEvent != NULL)
+		 WaitForSingleObject(m_fenceEvent, INFINITE);
+	 else
+		 exit(-1);
+
+	 m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 
 	 camera.SetPosition(30.0f, 30.0f, -30.0f);
 	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
- }
-
- void Graphics::WaitForPreviousFrame()
- {
-	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-	// This is code implemented as such for simplicity. More advanced samples 
-	// illustrate how to use fences for efficient resource usage.
-
-	// Signal and increment the fence value.
-	 try {
-		 const UINT64 fence = m_fenceValue;
-		 HRESULT hr;
-		 hr = command_queue->Signal(m_fence.Get(), fence);
-		 COM_ERROR_IF_FAILED(hr, "Failed to Signal.");
-
-		 m_fenceValue++;
-
-		 // Wait until the previous frame is finished.
-		 if (m_fence->GetCompletedValue() < fence)
-		 {
-			 hr = m_fence->SetEventOnCompletion(fence, m_fenceEvent);
-			 COM_ERROR_IF_FAILED(hr, "Failed to Wait.");
-
-			 WaitForSingleObject(m_fenceEvent, INFINITE);
-		 }
-
-		 m_frameIndex = swapchain->GetCurrentBackBufferIndex();
-	 }
-	 catch (COMException& e)
-	 {
-		 ErrorLogger::Log(e);
-		 exit(-1);
-	 }
  }
 
  void Graphics::PopulateCommandList()
@@ -727,13 +755,6 @@ void Graphics::InitPipelineState()
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12
-		 /*ID3D12DescriptorHeap* heaps[] = { spriteHeap->Heap() };
-		 command_list->SetDescriptorHeaps(_countof(heaps), heaps);
-		 spriteBatch->Begin(command_list.Get());
-
-		 spriteFont->DrawString(spriteBatch.get(), L"Hello World!", DirectX::XMFLOAT2(0, 0), DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1, 1));
-
-		 spriteBatch->End();*/
 
 		 // Indicate that the back buffer will now be used to present.
 		 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

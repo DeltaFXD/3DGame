@@ -40,24 +40,24 @@
     <Text Include="changelog.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Engine\H\Engine.h" />
-    <ClInclude Include="src\Engine\H\WindowContainer.h" />
-    <ClInclude Include="src\Graphics\H\AdapterReader.h" />
-    <ClInclude Include="src\Graphics\H\Camera.h" />
-    <ClInclude Include="src\Graphics\H\ConstantBufferTypes.h" />
-    <ClInclude Include="src\Graphics\H\Graphics.h" />
-    <ClInclude Include="src\Graphics\H\Shaders.h" />
-    <ClInclude Include="src\Graphics\H\Vertex.h" />
-    <ClInclude Include="src\Input\H\KeyboardClass.h" />
-    <ClInclude Include="src\Input\H\KeyboardEvent.h" />
-    <ClInclude Include="src\Input\H\MouseClass.h" />
-    <ClInclude Include="src\Input\H\MouseEvent.h" />
-    <ClInclude Include="src\Render\H\RenderWindow.h" />
-    <ClInclude Include="src\Utility\H\COMException.h" />
-    <ClInclude Include="src\Utility\H\Config.h" />
-    <ClInclude Include="src\Utility\H\ErrorLogger.h" />
-    <ClInclude Include="src\Utility\H\StringConverter.h" />
-    <ClInclude Include="src\Utility\H\Timer.h" />
+    <ClInclude Include="src\Engine\Engine.h" />
+    <ClInclude Include="src\Engine\WindowContainer.h" />
+    <ClInclude Include="src\Graphics\AdapterReader.h" />
+    <ClInclude Include="src\Graphics\Camera.h" />
+    <ClInclude Include="src\Graphics\ConstantBufferTypes.h" />
+    <ClInclude Include="src\Graphics\Graphics.h" />
+    <ClInclude Include="src\Graphics\Shaders.h" />
+    <ClInclude Include="src\Graphics\Vertex.h" />
+    <ClInclude Include="src\Input\KeyboardClass.h" />
+    <ClInclude Include="src\Input\KeyboardEvent.h" />
+    <ClInclude Include="src\Input\MouseClass.h" />
+    <ClInclude Include="src\Input\MouseEvent.h" />
+    <ClInclude Include="src\Render\RenderWindow.h" />
+    <ClInclude Include="src\Utility\COMException.h" />
+    <ClInclude Include="src\Utility\Config.h" />
+    <ClInclude Include="src\Utility\ErrorLogger.h" />
+    <ClInclude Include="src\Utility\StringConverter.h" />
+    <ClInclude Include="src\Utility\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="pixelshader.hlsl">

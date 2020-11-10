@@ -58,3 +58,5 @@
 #2020.11.08
 -More error logging
 -Simplify file structure for headers
+#2020.11.10
+-Better fence useage
