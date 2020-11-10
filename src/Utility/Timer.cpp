@@ -2,50 +2,35 @@
 
 Timer::Timer()
 {
-	start = std::chrono::high_resolution_clock::now();
-	stop = std::chrono::high_resolution_clock::now();
+	now = std::chrono::high_resolution_clock::now();
+	lastTime = std::chrono::high_resolution_clock::now();
 }
 
-double Timer::GetMilisecondsElapsed()
+bool Timer::IsSecondPassed()
 {
-	if (isrunning)
+	if (sum > 1000)
 	{
-		auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start);
-		return elapsed.count();
-	}
-	else
-	{
-		auto elapsed = std::chrono::duration<double, std::milli>(stop - start);
-		return elapsed.count();
-	}
-}
-
-void Timer::Restart()
-{
-	isrunning = true;
-	start = std::chrono::high_resolution_clock::now();
-}
-
-bool Timer::Stop()
-{
-	if (!isrunning)
-		return false;
-	else
-	{
-		stop = std::chrono::high_resolution_clock::now();
-		isrunning = false;
+		sum -= 1000;
 		return true;
 	}
-}
-
-bool Timer::Start()
-{
-	if (isrunning)
-		return false;
 	else
 	{
-		start = std::chrono::high_resolution_clock::now();
-		isrunning = true;
-		return true;
+		return false;
 	}
+}
+
+double Timer::GetDelta()
+{
+	now = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration<double, std::nano>(now - lastTime);
+	//auto elapsedM = std::chrono::duration<double, std::milli>(now - lastTime);
+	lastTime = now;
+	sum += elapsed.count() / 1000000.0;
+	return elapsed.count() / nanoSecond;
+}
+
+void Timer::Set()
+{
+	now = std::chrono::high_resolution_clock::now();
+	lastTime = now;
 }

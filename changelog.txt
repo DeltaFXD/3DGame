@@ -60,3 +60,4 @@
 -Simplify file structure for headers
 #2020.11.10
 -Better fence useage
+-Add update counter & better timing partial V-sync support

@@ -7,8 +7,13 @@ class Engine : WindowContainer{
 public:
 	bool Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height);
 	bool ProcessMessages();
-	void Update();
-	void Render();
+	void Run();
 private:
+	void Render();
+	void Update();
 	Timer timer;
+
+	int frames = 0;
+	int updates = 0;
+	double delta = 0.0;
 };

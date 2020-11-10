@@ -78,5 +78,4 @@ private:
 
 	int wWidth = 0;
 	int wHeight = 0;
-	Timer fpsTimer;
 };

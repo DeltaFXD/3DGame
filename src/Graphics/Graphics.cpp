@@ -3,7 +3,6 @@
 
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
-	fpsTimer.Start();
 	//Set viewport
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -37,19 +36,6 @@ void Graphics::Render()
 {
 	HRESULT hr;
 
-	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < m_fencePrevValue)
-	{
-		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to wait for fence.");
-			exit(-1);
-		}
-
-		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
-
 	XMMATRIX world = XMMatrixIdentity();
 
 	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
@@ -63,19 +49,15 @@ void Graphics::Render()
 	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
 	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-	static int fpsCounter = 0;
-	static std::string fpsString = "FPS: 0";
-	fpsCounter += 1;
-	if (fpsTimer.GetMilisecondsElapsed() > 1000)
-	{
-		fpsString = "FPS: " + std::to_string(fpsCounter) + "\n";
-		OutputDebugStringA(fpsString.c_str());
-		fpsCounter = 0;
-		fpsTimer.Restart();
-	}
-
 	// Present the frame.
-	hr = swapchain->Present(1, 0);
+	if (Config::IsVSyncOn())
+	{
+		hr = swapchain->Present(1, 0);
+	}
+	else
+	{
+		hr = swapchain->Present(0, 0);
+	}
 	if (FAILED(hr))
 	{
 		hr = device->GetDeviceRemovedReason();
@@ -93,6 +75,19 @@ void Graphics::Render()
 	}
 
 	m_fenceValue++;
+
+	// Wait until the previous frame is finished.
+	if (m_fence->GetCompletedValue() < m_fencePrevValue)
+	{
+		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to wait for fence.");
+			exit(-1);
+		}
+
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
 
 	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 }

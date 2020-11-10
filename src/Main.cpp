@@ -6,8 +6,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	engine.Initialize(hInstance, "HelloWord", "MyWindowClass", 1360, 765);
 	while (engine.ProcessMessages() == true)
 	{
-		engine.Update();
-		engine.Render();
+		engine.Run();
 	}
 
 	return 0;
