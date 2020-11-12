@@ -158,6 +158,9 @@
     <ClInclude Include="src\Graphics\Buffers\VertexBuffer.h">
       <Filter>Header Files\Graphics\Buffers</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\Buffers\IndexBuffer.h">
+      <Filter>Header Files\Graphics\Buffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">

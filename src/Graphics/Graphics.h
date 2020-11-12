@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "Utility/Timer.h"
 #include "Buffers/VertexBuffer.h"
+#include "Buffers/IndexBuffer.h"
 
 class Graphics
 {
@@ -54,14 +55,12 @@ private:
 	D3D12_RECT m_scissorRect;
 
 	//Shaders
-	wrl::ComPtr<ID3D12Resource> index_buffer;		//TODO: wrap index buffer
 	wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
 	UINT8* constantBufferDataBegin;
 
 	VertexBuffer<Vertex> vertex_buffer;
-
-	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+	IndexBuffer index_buffer;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;

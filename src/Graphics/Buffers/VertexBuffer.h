@@ -3,7 +3,6 @@
 #include <d3d12.h>
 #include <d3dx12.h>
 #include <wrl/client.h>
-#include "Utility/ErrorLogger.h"
 
 namespace wrl = Microsoft::WRL;
 
@@ -49,9 +48,7 @@ public:
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr, __uuidof(ID3D12Resource), (void**)buffer.GetAddressOf());
 		if (FAILED(hr))
-		{
 			return hr;
-		}
 
 		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -60,9 +57,7 @@ public:
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr, __uuidof(ID3D12Resource), (void**)upload_buffer.GetAddressOf());
 		if (FAILED(hr))
-		{
 			return hr;
-		}
 
 		// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
 		D3D12_SUBRESOURCE_DATA vertexData = {};

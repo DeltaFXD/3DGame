@@ -518,41 +518,14 @@ void Graphics::InitPipelineState()
 			 z += 6;
 		 }
 
-		 const UINT indexBufferSize = sizeof(indices);
+		 //const UINT indexBufferSize = sizeof(indices);
 		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256)); // CB size is required to be 256-byte aligned.
 
-		 hr = vertex_buffer.Initialize(device.Get(), command_list.Get(), square, 289);
-		 COM_ERROR_IF_FAILED(hr, "Failed to initialze VertexBuffer.");
+		 hr = vertex_buffer.Initialize(device.Get(), command_list.Get(), square, ARRAYSIZE(square));
+		 COM_ERROR_IF_FAILED(hr, "Failed to initialize VertexBuffer.");
 
-		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
-			 D3D12_RESOURCE_STATE_COPY_DEST,
-			 nullptr, __uuidof(ID3D12Resource), (void**)index_buffer.GetAddressOf());
-		 COM_ERROR_IF_FAILED(hr, "Failed to create IndexBuffer.");
-
-		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
-			 D3D12_RESOURCE_STATE_GENERIC_READ,
-			 nullptr, __uuidof(ID3D12Resource), (void**)indexBufferUploadHeap.GetAddressOf());
-		 COM_ERROR_IF_FAILED(hr, "Failed to create IndexBuffer.");
-
-		 // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the index buffer.
-		 D3D12_SUBRESOURCE_DATA indexData = {};
-		 indexData.pData = indices;
-		 indexData.RowPitch = indexBufferSize;
-		 indexData.SlicePitch = indexBufferSize;
-
-		 UpdateSubresources<1>(command_list.Get(), index_buffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-		 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(index_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-		 //Initialize the index buffer view
-		 m_indexBufferView.BufferLocation = index_buffer->GetGPUVirtualAddress();
-		 m_indexBufferView.SizeInBytes = indexBufferSize;
-		 m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		 hr = index_buffer.Initialize(device.Get(), command_list.Get(), indices, ARRAYSIZE(indices));
+		 COM_ERROR_IF_FAILED(hr, "Failed to initialize IndexBuffer.");
 
 		 // Describe and create a SRV for the texture.
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
@@ -672,6 +645,7 @@ void Graphics::InitPipelineState()
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
 	 vertex_buffer.FreeUploadResource();
+	 index_buffer.FreeUploadResource();
  }
 
  void Graphics::PopulateCommandList()
@@ -718,7 +692,7 @@ void Graphics::InitPipelineState()
 
 		 //Draw triangle
 		 command_list->IASetVertexBuffers(0, 1, &vertex_buffer.Get());
-		 command_list->IASetIndexBuffer(&m_indexBufferView);
+		 command_list->IASetIndexBuffer(&index_buffer.Get());
 		 command_list->DrawIndexedInstanced(1536, 1, 0, 0, 0);
 
 		 //Draw text
