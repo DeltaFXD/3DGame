@@ -61,3 +61,5 @@
 #2020.11.10
 -Better fence useage
 -Add update counter & better timing partial V-sync support
+#2020.11.11
+-Wrap vertex buffer

@@ -4,14 +4,13 @@
 #include <d3dx12.h>
 #include "Vertex.h"
 #include "ConstantBufferTypes.h"
-#include <SpriteBatch.h>
-#include <SpriteFont.h>
 #include "DescriptorHeap.h"
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
 #include "Camera.h"
 #include "Utility/Timer.h"
+#include "Buffers/VertexBuffer.h"
 
 class Graphics
 {
@@ -55,13 +54,13 @@ private:
 	D3D12_RECT m_scissorRect;
 
 	//Shaders
-	wrl::ComPtr<ID3D12Resource> vertex_buffer;		//TODO: wrap vertex buffer
 	wrl::ComPtr<ID3D12Resource> index_buffer;		//TODO: wrap index buffer
 	wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
 	UINT8* constantBufferDataBegin;
 
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+	VertexBuffer<Vertex> vertex_buffer;
+
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
 	VertexShader vertex_shader;

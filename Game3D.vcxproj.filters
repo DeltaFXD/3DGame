@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{b2af6856-5c31-40b3-ad63-7be2f3d8820a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Graphics\Buffers">
+      <UniqueIdentifier>{e695180a-83ae-4f44-adc8-b5ac4a78f3c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -151,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="src\Utility\StringConverter.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Buffers\VertexBuffer.h">
+      <Filter>Header Files\Graphics\Buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

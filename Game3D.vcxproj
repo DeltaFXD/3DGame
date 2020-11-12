@@ -43,6 +43,7 @@
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\WindowContainer.h" />
     <ClInclude Include="src\Graphics\AdapterReader.h" />
+    <ClInclude Include="src\Graphics\Buffers\VertexBuffer.h" />
     <ClInclude Include="src\Graphics\Camera.h" />
     <ClInclude Include="src\Graphics\ConstantBufferTypes.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />

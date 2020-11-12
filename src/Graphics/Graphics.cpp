@@ -438,7 +438,6 @@ void Graphics::InitPipelineState()
 
  void Graphics::InitializeScene()
  {
-	 wrl::ComPtr<ID3D12Resource> vertexBufferUploadHeap;
 	 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
 
 	 HRESULT hr;
@@ -519,39 +518,11 @@ void Graphics::InitPipelineState()
 			 z += 6;
 		 }
 
-		 const UINT vertexBufferSize = sizeof(square);
 		 const UINT indexBufferSize = sizeof(indices);
 		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256)); // CB size is required to be 256-byte aligned.
 
-		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-			 D3D12_RESOURCE_STATE_COPY_DEST,
-			 nullptr, __uuidof(ID3D12Resource), (void**)vertex_buffer.GetAddressOf());
-		 COM_ERROR_IF_FAILED(hr, "Failed to create VertexBuffer.");
-
-		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-			 D3D12_RESOURCE_STATE_GENERIC_READ,
-			 nullptr, __uuidof(ID3D12Resource), (void**)vertexBufferUploadHeap.GetAddressOf());
-		 COM_ERROR_IF_FAILED(hr, "Failed to create upload buffer for vertecies.");
-
-		 // Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the vertex buffer.
-		 D3D12_SUBRESOURCE_DATA vertexData = {};
-		 vertexData.pData = square;
-		 vertexData.RowPitch = vertexBufferSize;
-		 vertexData.SlicePitch = vertexBufferSize;
-
-		 UpdateSubresources<1>(command_list.Get(), vertex_buffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-		 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-		 // Initialize the vertex buffer view.
-		 m_vertexBufferView.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
-		 m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-		 m_vertexBufferView.SizeInBytes = vertexBufferSize;
+		 hr = vertex_buffer.Initialize(device.Get(), command_list.Get(), square, 289);
+		 COM_ERROR_IF_FAILED(hr, "Failed to initialze VertexBuffer.");
 
 		 hr = device->CreateCommittedResource(
 			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -699,6 +670,8 @@ void Graphics::InitPipelineState()
 	 camera.SetPosition(30.0f, 30.0f, -30.0f);
 	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
+
+	 vertex_buffer.FreeUploadResource();
  }
 
  void Graphics::PopulateCommandList()
@@ -744,7 +717,7 @@ void Graphics::InitPipelineState()
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		 //Draw triangle
-		 command_list->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+		 command_list->IASetVertexBuffers(0, 1, &vertex_buffer.Get());
 		 command_list->IASetIndexBuffer(&m_indexBufferView);
 		 command_list->DrawIndexedInstanced(1536, 1, 0, 0, 0);
 
