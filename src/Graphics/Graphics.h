@@ -12,6 +12,7 @@
 #include "Utility/Timer.h"
 #include "Buffers/VertexBuffer.h"
 #include "Buffers/IndexBuffer.h"
+#include "Model.h"
 
 class Graphics
 {
@@ -64,6 +65,8 @@ private:
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;
+
+	Model test_model;
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;

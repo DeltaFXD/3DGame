@@ -96,6 +96,9 @@
     <ClCompile Include="src\Utility\Timer.cpp">
       <Filter>Source Files\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Model.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Buffers\IndexBuffer.h">
       <Filter>Header Files\Graphics\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Model.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

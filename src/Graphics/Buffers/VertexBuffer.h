@@ -36,10 +36,10 @@ public:
 		upload_buffer.Reset();
 	}
 
-	HRESULT Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, T* data, UINT numberOf)
+	HRESULT Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, T* data, UINT count)
 	{
 		HRESULT hr;
-		const UINT buffer_size = sizeof(T) * numberOf;
+		const UINT buffer_size = sizeof(T) * count;
 
 		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),

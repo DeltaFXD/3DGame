@@ -12,6 +12,7 @@ private:
 	wrl::ComPtr<ID3D12Resource> buffer;
 	wrl::ComPtr<ID3D12Resource> upload_buffer;
 	D3D12_INDEX_BUFFER_VIEW buffer_view;
+	UINT count = 0;
 public:
 	IndexBuffer() {
 
@@ -29,16 +30,21 @@ public:
 		upload_buffer.Reset();
 	}
 
+	UINT GetIndexCount() const
+	{
+		return count;
+	}
+
 	D3D12_INDEX_BUFFER_VIEW Get() const
 	{
 		return buffer_view;
 	}
 
-	HRESULT Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, DWORD* data, UINT numberOf)
+	HRESULT Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, DWORD* data, UINT count)
 	{
 		HRESULT hr;
-
-		const UINT buffer_size = sizeof(DWORD) * numberOf;
+		this->count = count;
+		const UINT buffer_size = sizeof(DWORD) * count;
 
 		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),

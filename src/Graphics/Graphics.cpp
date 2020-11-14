@@ -28,6 +28,8 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	}
 
 	InitPipelineState();
+	//Prepare scene
+	InitializeScene();
 
 	return true;
 }
@@ -432,14 +434,10 @@ void Graphics::InitPipelineState()
 		ErrorLogger::Log(e);
 		exit(-1);
 	}
-	//Prepare scene
-	InitializeScene();
  }
 
  void Graphics::InitializeScene()
  {
-	 wrl::ComPtr<ID3D12Resource> indexBufferUploadHeap;
-
 	 HRESULT hr;
 	 try {
 
@@ -518,7 +516,6 @@ void Graphics::InitPipelineState()
 			 z += 6;
 		 }
 
-		 //const UINT indexBufferSize = sizeof(indices);
 		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256)); // CB size is required to be 256-byte aligned.
 
 		 hr = vertex_buffer.Initialize(device.Get(), command_list.Get(), square, ARRAYSIZE(square));
@@ -526,6 +523,7 @@ void Graphics::InitPipelineState()
 
 		 hr = index_buffer.Initialize(device.Get(), command_list.Get(), indices, ARRAYSIZE(indices));
 		 COM_ERROR_IF_FAILED(hr, "Failed to initialize IndexBuffer.");
+
 
 		 // Describe and create a SRV for the texture.
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
@@ -560,6 +558,10 @@ void Graphics::InitPipelineState()
 		 COM_ERROR_IF_FAILED(hr, "Failed to map constant buffer.");
 
 		 memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+
+		 //Needs constant buffer
+		 if (!test_model.Initialize(device.Get(), command_list.Get(), constantBufferDataBegin))
+			 exit(-1);
 
 		 //Create depth stencil view
 		 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -646,6 +648,7 @@ void Graphics::InitPipelineState()
 
 	 vertex_buffer.FreeUploadResource();
 	 index_buffer.FreeUploadResource();
+	 test_model.ReleaseExtra();
  }
 
  void Graphics::PopulateCommandList()
@@ -693,7 +696,10 @@ void Graphics::InitPipelineState()
 		 //Draw triangle
 		 command_list->IASetVertexBuffers(0, 1, &vertex_buffer.Get());
 		 command_list->IASetIndexBuffer(&index_buffer.Get());
-		 command_list->DrawIndexedInstanced(1536, 1, 0, 0, 0);
+		 command_list->DrawIndexedInstanced(index_buffer.GetIndexCount(), 1, 0, 0, 0);
+
+		 //Draw model
+		 test_model.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12
