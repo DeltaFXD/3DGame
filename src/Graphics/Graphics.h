@@ -2,16 +2,12 @@
 #include "AdapterReader.h"
 #include "Shaders.h"
 #include <d3dx12.h>
-#include "Vertex.h"
-#include "ConstantBufferTypes.h"
 #include "DescriptorHeap.h"
 #include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
 #include <WICTextureLoader.h>
 #include "Camera.h"
 #include "Utility/Timer.h"
-#include "Buffers/VertexBuffer.h"
-#include "Buffers/IndexBuffer.h"
 #include "Model.h"
 
 class Graphics
@@ -22,6 +18,7 @@ public:
 	void Update();
 	void Destroy();
 	Camera camera;
+	Model test_model;
 private:
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
@@ -66,7 +63,6 @@ private:
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;
 
-	Model test_model;
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;

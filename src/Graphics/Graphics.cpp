@@ -38,12 +38,14 @@ void Graphics::Render()
 {
 	HRESULT hr;
 
+	//Update constant buffer
 	XMMATRIX world = XMMatrixIdentity();
 
 	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
 	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
 
 	memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
 
@@ -96,7 +98,6 @@ void Graphics::Render()
 
 void Graphics::Update()
 {
-
 }
 
 void Graphics::Destroy()
@@ -286,7 +287,7 @@ void Graphics::CreateDescriptorHeaps()
 		// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
 		// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
 		D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc = {};
-		cbvsrvHeapDesc.NumDescriptors = 2; //SRV + CBV
+		cbvsrvHeapDesc.NumDescriptors = 3; //SRV + CBV
 		cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -539,17 +540,26 @@ void Graphics::InitPipelineState()
 		 hr = device->CreateCommittedResource(
 			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize),
+			 &CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize * 2),
 			 D3D12_RESOURCE_STATE_GENERIC_READ,
 			 nullptr, __uuidof(ID3D12Resource), (void**)constant_buffer.GetAddressOf()
 		 );
 		 COM_ERROR_IF_FAILED(hr, "Failed to create ConstantBuffer.");
 
+		 UINT64 cbOffset = 0;
 		 //Describe and create a CBV
 		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		 cbvDesc.BufferLocation = constant_buffer->GetGPUVirtualAddress();
+		 cbvDesc.BufferLocation = constant_buffer->GetGPUVirtualAddress() + cbOffset;
 		 cbvDesc.SizeInBytes = constantBufferSize;
+		 cbOffset += cbvDesc.SizeInBytes;
 		 device->CreateConstantBufferView(&cbvDesc, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 //Describe and create a CBV
+		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc2 = {};
+		 cbvDesc2.BufferLocation = constant_buffer->GetGPUVirtualAddress() + cbOffset;
+		 cbvDesc2.SizeInBytes = constantBufferSize;
+		 device->CreateConstantBufferView(&cbvDesc2, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
 		 // Map and initialize the constant buffer. We don't unmap this until the app closes. Keeping things mapped for the lifetime of the resource is okay.
@@ -693,13 +703,13 @@ void Graphics::InitPipelineState()
 
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		 //Draw triangle
+		 //Draw "map"
 		 command_list->IASetVertexBuffers(0, 1, &vertex_buffer.Get());
 		 command_list->IASetIndexBuffer(&index_buffer.Get());
 		 command_list->DrawIndexedInstanced(index_buffer.GetIndexCount(), 1, 0, 0, 0);
 
 		 //Draw model
-		 test_model.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+		 test_model.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix(), cbvsrvHeap.Get(), m_cbvsrvDescriptorSize);
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

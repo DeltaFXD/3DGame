@@ -67,3 +67,4 @@
 -Wrap index buffer
 #2020.11.14
 -Implement basic model
+-Improve model and model movement
