@@ -1,9 +1,6 @@
 #pragma once
 #include "Utility/ErrorLogger.h"
 #include <d3d12.h>
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "DirectXTK12.lib")
-#pragma comment(lib, "DXGI.lib")
 #include <wrl/client.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
