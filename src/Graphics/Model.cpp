@@ -1,46 +1,15 @@
 #include "Model.h"
 
-bool Model::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin)
+bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin)
 {
 	this->command_list = command_list;
+	this->device = device;
 	this->constantBufferDataBegin = constantBufferBegin;
 
 	try
 	{
-		//Cube
-		Vertex cube[] =
-		{
-			Vertex(-0.5f, 0.5f, -0.5f, 0.0f, 1.0f), //FRONT Bottom Left  - [0]
-			Vertex(-0.5f, 1.5f, -0.5f, 0.0f, 0.0f), //FRONT Top Left     - [1]
-			Vertex( 0.5f, 1.5f, -0.5f, 1.0f, 0.0f), //FRONT Top Right    - [2]
-			Vertex( 0.5f, 0.5f, -0.5f, 1.0f, 1.0f), //FRONT Bottom Right - [3]
-			Vertex(-0.5f, 0.5f,  0.5f, 0.0f, 1.0f), //BACK Bottom Left   - [4]
-			Vertex(-0.5f, 1.5f,  0.5f, 0.0f, 0.0f), //BACK Top Left      - [5]
-			Vertex( 0.5f, 1.5f,  0.5f, 1.0f, 0.0f), //BACK Top Right     - [6]
-			Vertex( 0.5f, 0.5f,  0.5f, 1.0f, 1.0f), //BACK Bottom Right  - [7]
-		};
-
-		HRESULT hr = vertexBuffer.Initialize(device, command_list, cube, ARRAYSIZE(cube));
-		COM_ERROR_IF_FAILED(hr, "Failed to initialize vertex buffer.");
-
-		DWORD indicies[] =
-		{
-			0, 1, 2, //FRONT
-			0, 2, 3, //FRONT
-			4, 7, 6, //BACK 
-			4, 6, 5, //BACK
-			3, 2, 6, //RIGHT SIDE
-			3, 6, 7, //RIGHT SIDE
-			4, 5, 1, //LEFT SIDE
-			4, 1, 0, //LEFT SIDE
-			1, 5, 6, //TOP
-			1, 6, 2, //TOP
-			0, 3, 7, //BOTTOM
-			0, 7, 4, //BOTTOM
-		};
-
-		hr = indexBuffer.Initialize(device, command_list, indicies, ARRAYSIZE(indicies));
-		COM_ERROR_IF_FAILED(hr, "Failed to initialize index buffer.");
+		if (!LoadModel(path))
+			return false;
 	}
 	catch (COMException& e)
 	{
@@ -67,10 +36,11 @@ void Model::Render(const XMMATRIX& viewProjMatrix, ID3D12DescriptorHeap* cbvsrvH
 	command_list->SetGraphicsRootDescriptorTable(1, cbvHandle);
 	cbvHandle.Offset(cbvSize);
 
-	command_list->IASetVertexBuffers(0, 1, &vertexBuffer.Get());
-	command_list->IASetIndexBuffer(&indexBuffer.Get());
-
-	command_list->DrawIndexedInstanced(indexBuffer.GetIndexCount(), 1, 0, 0, 0);
+	//Render meshes
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].Render();
+	}
 }
 
 void Model::UpdateWorldMatrix()
@@ -83,10 +53,76 @@ void Model::UpdateWorldMatrix()
 	vec_right = XMVector3TransformCoord(DEFAULT_RIGHT_VECTOR, vecRotationMatrix);
 }
 
+bool Model::LoadModel(const std::string& path)
+{
+	Assimp::Importer importer;
+
+	const aiScene* pScene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+
+	if (pScene == NULL)
+		return false;
+
+	ProcessNode(pScene->mRootNode, pScene);
+	return true;
+}
+
+void Model::ProcessNode(aiNode* node,const aiScene* scene)
+{
+	for (UINT i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		meshes.push_back(ProcessMesh(mesh, scene));
+	}
+
+	for (UINT i = 0; i < node->mNumChildren; i++)
+	{
+		ProcessNode(node->mChildren[i], scene);
+	}
+}
+
+Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+{
+	std::vector<Vertex> vertices;
+	std::vector<DWORD> indices;
+
+	//Retrieve vertex data
+	for (UINT i = 0; i < mesh->mNumVertices; i++)
+	{
+		Vertex vertex;
+
+		vertex.pos.x = mesh->mVertices[i].x;
+		vertex.pos.y = mesh->mVertices[i].y;
+		vertex.pos.z = mesh->mVertices[i].z;
+
+		if (mesh->mTextureCoords[0])
+		{
+			vertex.texCoord.x = (float)mesh->mTextureCoords[0][i].x;
+			vertex.texCoord.y = (float)mesh->mTextureCoords[0][i].y;
+		}
+
+		vertices.push_back(vertex);
+	}
+
+	//Retrieve index data
+	for (UINT i = 0; i < mesh->mNumFaces; i++)
+	{
+		aiFace face = mesh->mFaces[i];
+
+		for (UINT j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	return Mesh(device, command_list, vertices, indices);
+}
+
 void Model::ReleaseExtra()
 {
-	indexBuffer.FreeUploadResource();
-	vertexBuffer.FreeUploadResource();
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].ReleaseLoadingResources();
+	}
 }
 
 const XMVECTOR& Model::GetPositionVector() const

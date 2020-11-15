@@ -570,7 +570,7 @@ void Graphics::InitPipelineState()
 		 memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 
 		 //Needs constant buffer
-		 if (!test_model.Initialize(device.Get(), command_list.Get(), constantBufferDataBegin))
+		 if (!test_model.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), constantBufferDataBegin))
 			 exit(-1);
 
 		 //Create depth stencil view

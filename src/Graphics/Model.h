@@ -1,16 +1,13 @@
 #pragma once
-#include "Vertex.h"
+#include "Mesh.h"
 #include "ConstantBufferTypes.h"
-#include "Buffers/VertexBuffer.h"
-#include "Buffers/IndexBuffer.h"
-#include "Utility/ErrorLogger.h"
 
 using namespace DirectX;
 
 class Model
 {
 public:
-	bool Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin);
+	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin);
 	void Render(const XMMATRIX& viewProjMatrix, ID3D12DescriptorHeap* cbvsrvHeap, const UINT cbvSize);
 	void ReleaseExtra();
 
@@ -39,14 +36,18 @@ public:
 	const XMVECTOR& GetLeftVector();
 	const XMVECTOR& GetBackwardVector();
 private:
+	std::vector<Mesh> meshes;
+
 	void UpdateWorldMatrix();
+	bool LoadModel(const std::string& path);
+	void ProcessNode(aiNode* node, const aiScene* scene);
+	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
 	ID3D12GraphicsCommandList* command_list;
-	UINT8* constantBufferDataBegin;
+	ID3D12Device* device;
 
 	CB_VS_vertexshader constantBufferData;
-	VertexBuffer<Vertex> vertexBuffer;
-	IndexBuffer indexBuffer;
+	UINT8* constantBufferDataBegin;
 
 	XMMATRIX worldMatrix = XMMatrixIdentity();
 

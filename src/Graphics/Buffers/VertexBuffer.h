@@ -10,13 +10,17 @@ template<class T>
 class VertexBuffer
 {
 private:
-	VertexBuffer(const VertexBuffer<T>& rhs);
-private:
 	wrl::ComPtr<ID3D12Resource> buffer;
 	wrl::ComPtr<ID3D12Resource> upload_buffer;
 	D3D12_VERTEX_BUFFER_VIEW buffer_view;
 public:
 	VertexBuffer() {
+	}
+
+	VertexBuffer(const VertexBuffer<T>& rhs)
+	{
+		buffer = rhs.buffer;
+		buffer_view = rhs.buffer_view;
 	}
 
 	~VertexBuffer()

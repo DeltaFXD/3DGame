@@ -70,3 +70,4 @@
 -Improve model and model movement
 #2020.11.15
 -Setup assimp library
+-Load model (vertex&index data)
