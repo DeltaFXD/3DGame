@@ -441,64 +441,45 @@ void Graphics::InitPipelineState()
  {
 	 HRESULT hr;
 	 try {
+		 std::vector<Vertex> vertices;
+		 std::vector<DWORD> indices;
 
-		 Vertex square[289];/* =
-		 {
-			 Vertex(-0.5f, -0.5f, 20.0f, 0.0f, 1.0f), //Bottom Left	-	[0]
-			 Vertex(-0.5f,  0.5f, 20.0f, 0.0f, 0.0f), //Top Left	-	[1]
-			 Vertex( 0.5f,  0.5f, 20.0f, 1.0f, 0.0f), //Top Right	-	[2]
-			 Vertex( 0.5f, -0.5f, 20.0f, 1.0f, 1.0f), //Bottom Right-	[3]
-
-			 Vertex(-0.5f, -0.5f, 21.0f, 0.0f, 0.0f), //Bottom LeftB-	[4]
-			 Vertex(-0.5f,  0.5f, 21.0f, 0.0f, 1.0f), //Top LeftB	-	[5]
-			 Vertex( 0.5f,  0.5f, 21.0f, 1.0f, 1.0f), //Top RightB	-	[6]
-			 Vertex( 0.5f, -0.5f, 21.0f, 1.0f, 0.0f)  //Bottom RightB-	[7]
-		 };*/
 		 float x = -8.0f;
 		 float y = -9.0f;
 		 for (int i = 0; i < 289; i++)
 		 {
+			 Vertex vertex;
 			 if (i % 17 == 0)
 			 {
 				 y += 1.0f;
 				 x = -8.0f;
 			 }
-			 square[i].pos = XMFLOAT3(x, 0.0f, y);
+			 vertex.pos = XMFLOAT3(x, 0.0f, y);
 			 x += 1.0f;
 			 if (i % 2 == 0) {
 				 if ((i / 17) % 2 == 0)
 				 {
-					 square[i].texCoord = XMFLOAT2(0.0f, 0.0f);
+					 vertex.texCoord = XMFLOAT2(0.0f, 0.0f);
 				 }
 				 else
 				 {
-					 square[i].texCoord = XMFLOAT2(1.0f, 1.0f);
+					 vertex.texCoord = XMFLOAT2(1.0f, 1.0f);
 				 }
 			 }
 			 else
 			 {
 				 if ((i / 17) % 2 == 0)
 				 {
-					 square[i].texCoord = XMFLOAT2(1.0f, 0.0f);
+					 vertex.texCoord = XMFLOAT2(1.0f, 0.0f);
 				 }
 				 else
 				 {
-					 square[i].texCoord = XMFLOAT2(0.0f, 1.0f);
+					 vertex.texCoord = XMFLOAT2(0.0f, 1.0f);
 				 }
 			 }
+			 vertices.push_back(vertex);
 		 }
 
-		 DWORD indices[1536];/* =
-		 {
-			 0, 1, 2,
-			 0, 2, 3,
-			 3, 2, 6,
-			 3, 6, 7,
-			 4, 5, 1,
-			 4, 1, 0,
-			 1, 5, 6,
-			 1, 6, 2
-		 };*/
 		 int z = 0;
 		 int a = 16;
 		 for (int i = 0; z < 1536; i++)
@@ -507,24 +488,20 @@ void Graphics::InitPipelineState()
 				 a += 17;
 				 continue;
 			 }
-			 indices[z] = i;
-			 indices[z + 1] = i + 17;
-			 indices[z + 2] = i + 18;
+			 indices.push_back(i);
+			 indices.push_back(i + 17);
+			 indices.push_back(i + 18);
 
-			 indices[z + 3] = i;
-			 indices[z + 4] = i + 18;
-			 indices[z + 5] = i + 1;
+			 indices.push_back(i);
+			 indices.push_back(i + 18);
+			 indices.push_back(i + 1);
 			 z += 6;
 		 }
 
-		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256)); // CB size is required to be 256-byte aligned.
+		 // CB size is required to be 256-byte aligned.
+		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256));
 
-		 hr = vertex_buffer.Initialize(device.Get(), command_list.Get(), square, ARRAYSIZE(square));
-		 COM_ERROR_IF_FAILED(hr, "Failed to initialize VertexBuffer.");
-
-		 hr = index_buffer.Initialize(device.Get(), command_list.Get(), indices, ARRAYSIZE(indices));
-		 COM_ERROR_IF_FAILED(hr, "Failed to initialize IndexBuffer.");
-
+		 map = new Mesh(device.Get(), command_list.Get(), vertices, indices);
 
 		 // Describe and create a SRV for the texture.
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
@@ -656,8 +633,7 @@ void Graphics::InitPipelineState()
 	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
-	 vertex_buffer.FreeUploadResource();
-	 index_buffer.FreeUploadResource();
+	 map->ReleaseLoadingResources();
 	 test_model.ReleaseExtra();
  }
 
@@ -704,9 +680,7 @@ void Graphics::InitPipelineState()
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		 //Draw "map"
-		 command_list->IASetVertexBuffers(0, 1, &vertex_buffer.Get());
-		 command_list->IASetIndexBuffer(&index_buffer.Get());
-		 command_list->DrawIndexedInstanced(index_buffer.GetIndexCount(), 1, 0, 0, 0);
+		 map->Render();
 
 		 //Draw model
 		 test_model.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix(), cbvsrvHeap.Get(), m_cbvsrvDescriptorSize);

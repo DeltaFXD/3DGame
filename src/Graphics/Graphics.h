@@ -57,8 +57,7 @@ private:
 	CB_VS_vertexshader constantBufferData;
 	UINT8* constantBufferDataBegin;
 
-	VertexBuffer<Vertex> vertex_buffer;
-	IndexBuffer index_buffer;
+	Mesh* map;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;
