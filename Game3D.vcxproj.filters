@@ -46,6 +46,18 @@
     <Filter Include="Header Files\Graphics\Buffers">
       <UniqueIdentifier>{e695180a-83ae-4f44-adc8-b5ac4a78f3c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameObjects">
+      <UniqueIdentifier>{0c12167f-284d-48fd-95b6-aa141cb615f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameObjects">
+      <UniqueIdentifier>{13421465-4d0b-4e9d-af3e-7d31ae287633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameObjects\Entities">
+      <UniqueIdentifier>{82a43d7a-0b99-4dd5-8e76-026132822170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameObjects\Entities">
+      <UniqueIdentifier>{1254dd4c-6f72-4daf-9a2d-d21064d5a948}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -101,6 +113,12 @@
     </ClCompile>
     <ClCompile Include="src\Graphics\Mesh.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObjects\GameObject.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObjects\Entities\Entity.cpp">
+      <Filter>Source Files\GameObjects\Entities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +193,12 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Buffers\ConstantBuffer.h">
       <Filter>Header Files\Graphics\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameObjects\GameObject.h">
+      <Filter>Header Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameObjects\Entities\Entity.h">
+      <Filter>Header Files\GameObjects\Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,7 +8,7 @@
 #include <WICTextureLoader.h>
 #include "Camera.h"
 #include "Utility/Timer.h"
-#include "Model.h"
+#include "GameObjects/GameObject.h"
 
 class Graphics
 {
@@ -18,7 +18,7 @@ public:
 	void Update();
 	void Destroy();
 	Camera camera;
-	Model test_model;
+	GameObject test_go;
 private:
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();

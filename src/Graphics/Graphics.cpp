@@ -547,7 +547,7 @@ void Graphics::InitPipelineState()
 		 memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 
 		 //Needs constant buffer
-		 if (!test_model.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), constantBufferDataBegin))
+		 if (!test_go.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), constantBufferDataBegin))
 			 exit(-1);
 
 		 //Create depth stencil view
@@ -634,7 +634,7 @@ void Graphics::InitPipelineState()
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
 	 map->ReleaseLoadingResources();
-	 test_model.ReleaseExtra();
+	 test_go.ReleaseCreationResources();
  }
 
  void Graphics::PopulateCommandList()
@@ -683,7 +683,7 @@ void Graphics::InitPipelineState()
 		 map->Render();
 
 		 //Draw model
-		 test_model.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix(), cbvsrvHeap.Get(), m_cbvsrvDescriptorSize);
+		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix(), cbvsrvHeap.Get(), m_cbvsrvDescriptorSize);
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

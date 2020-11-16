@@ -63,17 +63,17 @@ void Engine::Update()
 	
 	if (keyboard.KeyIsPressed(VK_RIGHT))
 	{
-		gfx.test_model.AdjustRotation(0.0f, cameraSpeed, 0.0f);
+		gfx.test_go.AdjustRotation(0.0f, cameraSpeed, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_UP))
 	{
-		gfx.test_model.AdjustRotation(cameraSpeed, 0.0f, 0.0f);
+		gfx.test_go.AdjustRotation(cameraSpeed, 0.0f, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_DOWN))
 	{
-		gfx.test_model.AdjustRotation(0.0f, 0.0f, cameraSpeed);
+		gfx.test_go.AdjustRotation(0.0f, 0.0f, cameraSpeed);
 	}
 
 	if (keyboard.KeyIsPressed('W'))

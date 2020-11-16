@@ -72,3 +72,5 @@
 -Setup assimp library
 -Load model (vertex&index data)
 -Cleanup
+#2020.11.16
+-Add gameobject (refactor)
