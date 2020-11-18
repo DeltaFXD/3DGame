@@ -120,6 +120,9 @@
     <ClCompile Include="src\GameObjects\Entities\Entity.cpp">
       <Filter>Source Files\GameObjects\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Texture.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -199,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="src\GameObjects\Entities\Entity.h">
       <Filter>Header Files\GameObjects\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Texture.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

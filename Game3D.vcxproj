@@ -29,6 +29,7 @@
     <ClCompile Include="src\Graphics\Mesh.cpp" />
     <ClCompile Include="src\Graphics\Model.cpp" />
     <ClCompile Include="src\Graphics\Shaders.cpp" />
+    <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Input\KeyboardClass.cpp" />
     <ClCompile Include="src\Input\KeyboardEvent.cpp" />
     <ClCompile Include="src\Input\MouseClass.cpp" />
@@ -58,6 +59,7 @@
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\Model.h" />
     <ClInclude Include="src\Graphics\Shaders.h" />
+    <ClInclude Include="src\Graphics\Texture.h" />
     <ClInclude Include="src\Graphics\Vertex.h" />
     <ClInclude Include="src\Input\KeyboardClass.h" />
     <ClInclude Include="src\Input\KeyboardEvent.h" />

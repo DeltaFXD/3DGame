@@ -74,3 +74,5 @@
 -Cleanup
 #2020.11.16
 -Add gameobject (refactor)
+#2020.11.18
+-Texture class
