@@ -76,3 +76,9 @@
 -Add gameobject (refactor)
 #2020.11.18
 -Texture class
+#2020.11.19
+-Color class
+#2020.11.20
+-Texture fixes
+#2020.11.21
+-Init Texture manager

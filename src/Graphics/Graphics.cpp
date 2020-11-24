@@ -287,7 +287,7 @@ void Graphics::CreateDescriptorHeaps()
 		// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
 		// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
 		D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc = {};
-		cbvsrvHeapDesc.NumDescriptors = 3; //SRV + CBV
+		cbvsrvHeapDesc.NumDescriptors = 64; //SRV + CBV
 		cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 

@@ -123,6 +123,12 @@
     <ClCompile Include="src\Graphics\Texture.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Color.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\TextureManager.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -204,6 +210,12 @@
       <Filter>Header Files\GameObjects\Entities</Filter>
     </ClInclude>
     <ClInclude Include="src\Graphics\Texture.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Color.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\TextureManager.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
