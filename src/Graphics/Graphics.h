@@ -55,9 +55,9 @@ private:
 
 	//Shaders
 	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
-	wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
+	//wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
-	UINT8* constantBufferDataBegin;
+	//UINT8* constantBufferDataBegin;
 
 	Mesh* map;
 

@@ -66,18 +66,19 @@ public:
 		return hr;
 	}
 
-	void UpdateConstantBuffer(UINT slot, const T* data)
+	void UpdateConstantBuffer(UINT slot, const T& data)
 	{
 		if (bufferDataBegin == nullptr)
 			return;
 		
-		memcpy(bufferDataBegin + constantBufferSize * slot, data, sizeof(T));
+		memcpy(bufferDataBegin + sizeof(T) * slot, &data, sizeof(T));
 	}
 
 	void SetConstantBuffer(UINT slot)
 	{
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(heap->GetGPUDescriptorHandleForHeapStart(), cbStart + slot, cbvsrvDescriptorSize);
 		command_list->SetGraphicsRootDescriptorTable(1, cbvHandle);
+		cbvHandle.Offset(cbvsrvDescriptorSize);
 	}
 };
 

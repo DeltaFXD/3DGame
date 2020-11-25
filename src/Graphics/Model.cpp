@@ -1,10 +1,10 @@
 #include "Model.h"
 
-bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin)
+bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer)
 {
 	this->command_list = command_list;
 	this->device = device;
-	this->constantBufferDataBegin = constantBufferBegin;
+	this->constant_buffer = constant_buffer;
 
 	try
 	{
@@ -20,16 +20,16 @@ bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12Graph
 	return true;
 }
 
-void Model::Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix, ID3D12DescriptorHeap* cbvsrvHeap, const UINT cbvSize)
+void Model::Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix)
 {
 	constantBufferData.mat = worldMatrix * viewProjMatrix;
 	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
-	const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256));
-	memcpy(constantBufferDataBegin + constantBufferSize, &constantBufferData, sizeof(constantBufferData));
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 2, cbvSize);
-	command_list->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	cbvHandle.Offset(cbvSize);
+	//Update constant buffer
+	constant_buffer->UpdateConstantBuffer(1, constantBufferData);
+
+	//Set constant buffer
+	constant_buffer->SetConstantBuffer(1);
 
 	//Render meshes
 	for (int i = 0; i < meshes.size(); i++)

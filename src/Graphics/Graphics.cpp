@@ -44,7 +44,8 @@ void Graphics::Render()
 	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
 	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
 
-	memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+	//memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+	constantBuffer.UpdateConstantBuffer(0, constantBufferData);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
@@ -499,7 +500,7 @@ void Graphics::InitPipelineState()
 		 }
 
 		 // CB size is required to be 256-byte aligned.
-		 const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256));
+		 //const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256));
 
 		 map = new Mesh(device.Get(), command_list.Get(), vertices, indices);
 
@@ -513,41 +514,14 @@ void Graphics::InitPipelineState()
 		 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
-		 //Create constant buffer
-		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize * 2),
-			 D3D12_RESOURCE_STATE_GENERIC_READ,
-			 nullptr, __uuidof(ID3D12Resource), (void**)constant_buffer.GetAddressOf()
-		 );
-		 COM_ERROR_IF_FAILED(hr, "Failed to create ConstantBuffer.");
+		 //Initialize ConstantBuffer
+		 hr = constantBuffer.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 32);
+		 COM_ERROR_IF_FAILED(hr, "Failed to initialize ConstantBuffer.");
 
-		 UINT64 cbOffset = 0;
-		 //Describe and create a CBV
-		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		 cbvDesc.BufferLocation = constant_buffer->GetGPUVirtualAddress() + cbOffset;
-		 cbvDesc.SizeInBytes = constantBufferSize;
-		 cbOffset += cbvDesc.SizeInBytes;
-		 device->CreateConstantBufferView(&cbvDesc, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 //Describe and create a CBV
-		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc2 = {};
-		 cbvDesc2.BufferLocation = constant_buffer->GetGPUVirtualAddress() + cbOffset;
-		 cbvDesc2.SizeInBytes = constantBufferSize;
-		 device->CreateConstantBufferView(&cbvDesc2, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 // Map and initialize the constant buffer. We don't unmap this until the app closes. Keeping things mapped for the lifetime of the resource is okay.
-		 CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-		 hr = constant_buffer->Map(0, &readRange, reinterpret_cast<void**>(&constantBufferDataBegin));
-		 COM_ERROR_IF_FAILED(hr, "Failed to map constant buffer.");
-
-		 memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
+		 constantBuffer.UpdateConstantBuffer(0, constantBufferData);
 
 		 //Needs constant buffer
-		 if (!test_go.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), constantBufferDataBegin))
+		 if (!test_go.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), &constantBuffer))
 			 exit(-1);
 
 		 //Create depth stencil view
@@ -660,8 +634,6 @@ void Graphics::InitPipelineState()
 		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
 		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-		 command_list->SetGraphicsRootDescriptorTable(1, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 		 command_list->RSSetViewports(1, &m_viewport);
 		 command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -679,11 +651,13 @@ void Graphics::InitPipelineState()
 
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		 constantBuffer.SetConstantBuffer(0);
+
 		 //Draw "map"
 		 map->Render();
 
 		 //Draw model
-		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix(), cbvsrvHeap.Get(), m_cbvsrvDescriptorSize);
+		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

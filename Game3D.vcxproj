@@ -57,7 +57,7 @@
     <ClInclude Include="src\Graphics\Buffers\IndexBuffer.h" />
     <ClInclude Include="src\Graphics\Buffers\VertexBuffer.h" />
     <ClInclude Include="src\Graphics\Camera.h" />
-    <ClInclude Include="src\Graphics\ConstantBufferTypes.h" />
+    <ClInclude Include="src\Graphics\Buffers\ConstantBufferTypes.h" />
     <ClInclude Include="src\Graphics\Graphics.h" />
     <ClInclude Include="src\Graphics\Mesh.h" />
     <ClInclude Include="src\Graphics\Model.h" />

@@ -146,9 +146,6 @@
     <ClInclude Include="src\Graphics\Camera.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\ConstantBufferTypes.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="src\Graphics\Graphics.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -217,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\TextureManager.h">
       <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Buffers\ConstantBufferTypes.h">
+      <Filter>Header Files\Graphics\Buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
 #include "Mesh.h"
-#include "ConstantBufferTypes.h"
+#include "Buffers/ConstantBufferTypes.h"
 #include "Buffers/ConstantBuffer.h"
 
 using namespace DirectX;
@@ -8,8 +8,8 @@ using namespace DirectX;
 class Model
 {
 public:
-	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin);
-	void Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix, ID3D12DescriptorHeap* cbvsrvHeap, const UINT cbvSize);
+	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer);
+	void Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix);
 	void ReleaseExtra();
 private:
 	std::vector<Mesh> meshes;
@@ -22,5 +22,6 @@ private:
 	ID3D12Device* device;
 
 	CB_VS_vertexshader constantBufferData;
-	UINT8* constantBufferDataBegin;
+	//UINT8* constantBufferDataBegin;
+	ConstantBuffer<CB_VS_vertexshader>* constant_buffer;
 };

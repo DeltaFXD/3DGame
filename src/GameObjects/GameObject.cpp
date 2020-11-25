@@ -1,8 +1,8 @@
 #include "GameObject.h"
 
-bool GameObject::Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT8* constantBufferBegin)
+bool GameObject::Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer)
 {
-	if (!model.Initialize(path, device, command_list, constantBufferBegin))
+	if (!model.Initialize(path, device, command_list, constant_buffer))
 		return false;
 
 	SetPosition(0.0f, 0.0f, 0.0f);
@@ -13,9 +13,9 @@ bool GameObject::Initialize(const std::string& path, ID3D12Device* device, ID3D1
 	return true;
 }
 
-void GameObject::Render(const XMMATRIX& viewProjMatrix, ID3D12DescriptorHeap* cbvsrvHeap, const UINT cbvSize)
+void GameObject::Render(const XMMATRIX& viewProjMatrix)
 {
-	model.Render(worldMatrix, viewProjMatrix, cbvsrvHeap, cbvSize);
+	model.Render(worldMatrix, viewProjMatrix);
 }
 
 void GameObject::ReleaseCreationResources()
