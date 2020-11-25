@@ -85,4 +85,6 @@
 #2020.11.22
 -Wrap constant buffer
 #2020.11.23
--Improve constant buffer
+-Improve constant buffer & refactor
+#2020.11.24
+-Implement texture manager

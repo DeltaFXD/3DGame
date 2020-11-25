@@ -37,6 +37,7 @@ private:
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
 	wrl::ComPtr<ID3D12Resource> m_texture;
+	wrl::ComPtr<ID3D12Resource> m_texture2;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
@@ -53,17 +54,16 @@ private:
 	D3D12_VIEWPORT m_viewport;
 	D3D12_RECT m_scissorRect;
 
+	TextureManager text_mgr;
+
 	//Shaders
 	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
-	//wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
-	//UINT8* constantBufferDataBegin;
 
 	Mesh* map;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;
-
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;

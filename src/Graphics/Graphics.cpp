@@ -44,7 +44,6 @@ void Graphics::Render()
 	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
 	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
 
-	//memcpy(constantBufferDataBegin, &constantBufferData, sizeof(constantBufferData));
 	constantBuffer.UpdateConstantBuffer(0, constantBufferData);
 
 	// Record all the commands we need to render the scene into the command list.
@@ -250,6 +249,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample.png", m_texture.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
+
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample2.png", m_texture2.GetAddressOf(), false);
+		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture2 from file.");
 
 		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
 
@@ -499,9 +501,6 @@ void Graphics::InitPipelineState()
 			 z += 6;
 		 }
 
-		 // CB size is required to be 256-byte aligned.
-		 //const UINT constantBufferSize = static_cast<UINT>(sizeof(CB_VS_vertexshader) + (256 - sizeof(CB_VS_vertexshader) % 256));
-
 		 map = new Mesh(device.Get(), command_list.Get(), vertices, indices);
 
 		 // Describe and create a SRV for the texture.
@@ -513,6 +512,20 @@ void Graphics::InitPipelineState()
 		 srvDesc.Texture2D.MipLevels = 1;
 		 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 // Describe and create a SRV for the texture.
+		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
+		 srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		 srvDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		 srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		 srvDesc2.Texture2D.MipLevels = 1;
+		 device->CreateShaderResourceView(m_texture2.Get(), &srvDesc2, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 //Initialize texture manager
+		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 32);
+
+		 text_mgr.CreateTexture();
 
 		 //Initialize ConstantBuffer
 		 hr = constantBuffer.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 32);
@@ -655,6 +668,10 @@ void Graphics::InitPipelineState()
 
 		 //Draw "map"
 		 map->Render();
+
+		 text_mgr.SetTexture(0);
+		 /*command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);*/
 
 		 //Draw model
 		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());

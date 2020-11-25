@@ -22,6 +22,5 @@ private:
 	ID3D12Device* device;
 
 	CB_VS_vertexshader constantBufferData;
-	//UINT8* constantBufferDataBegin;
 	ConstantBuffer<CB_VS_vertexshader>* constant_buffer;
 };
