@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Utility/Timer.h"
 #include "GameObjects/GameObject.h"
+#include "TextureManager.h"
 
 class Graphics
 {
@@ -53,6 +54,7 @@ private:
 	D3D12_RECT m_scissorRect;
 
 	//Shaders
+	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
 	wrl::ComPtr<ID3D12Resource> constant_buffer;	//TODO: wrap constant buffer
 	CB_VS_vertexshader constantBufferData;
 	UINT8* constantBufferDataBegin;

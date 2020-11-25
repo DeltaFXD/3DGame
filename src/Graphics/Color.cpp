@@ -71,7 +71,7 @@ constexpr BYTE Color::GetBlue() const
 
 void Color::SetBlue(BYTE b)
 {
-	rgba[2] = g;
+	rgba[2] = b;
 }
 
 constexpr BYTE Color::GetAlpha() const

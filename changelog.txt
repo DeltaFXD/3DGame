@@ -82,3 +82,5 @@
 -Texture fixes
 #2020.11.21
 -Init Texture manager
+#2020.11.22
+-Wrap constant buffer

@@ -1,6 +1,7 @@
 #pragma once
 #include "Mesh.h"
 #include "ConstantBufferTypes.h"
+#include "Buffers/ConstantBuffer.h"
 
 using namespace DirectX;
 
