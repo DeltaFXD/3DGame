@@ -58,6 +58,12 @@
     <Filter Include="Header Files\GameObjects\Entities">
       <UniqueIdentifier>{1254dd4c-6f72-4daf-9a2d-d21064d5a948}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine\Level">
+      <UniqueIdentifier>{650faeb2-30d1-43f9-b489-ad4474e06a68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Level">
+      <UniqueIdentifier>{552c423d-3d08-497e-b44f-c3079aa8006d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp">
@@ -128,6 +134,9 @@
     </ClCompile>
     <ClCompile Include="src\Graphics\TextureManager.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Level\Level.cpp">
+      <Filter>Source Files\Engine\Level</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="src\Graphics\Buffers\ConstantBufferTypes.h">
       <Filter>Header Files\Graphics\Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Level\Level.h">
+      <Filter>Header Files\Engine\Level</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

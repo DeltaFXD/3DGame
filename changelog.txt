@@ -88,3 +88,7 @@
 -Improve constant buffer & refactor
 #2020.11.24
 -Implement texture manager
+#2020.11.25
+-Start modelling
+#2020.12.12
+-PerlinNoise implementation

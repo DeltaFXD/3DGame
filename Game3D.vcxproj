@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Engine\Level\Level.cpp" />
     <ClCompile Include="src\Graphics\Color.cpp" />
     <ClCompile Include="src\Engine\Engine.cpp" />
     <ClCompile Include="src\Engine\WindowContainer.cpp" />
@@ -47,6 +48,7 @@
     <Text Include="changelog.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Engine\Level\Level.h" />
     <ClInclude Include="src\Graphics\Color.h" />
     <ClInclude Include="src\Engine\Engine.h" />
     <ClInclude Include="src\Engine\WindowContainer.h" />

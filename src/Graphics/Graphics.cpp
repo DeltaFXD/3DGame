@@ -250,7 +250,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample.png", m_texture.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
 
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample2.png", m_texture2.GetAddressOf(), false);
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\diffuse.png", m_texture2.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture2 from file.");
 
 		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
@@ -534,7 +534,7 @@ void Graphics::InitPipelineState()
 		 constantBuffer.UpdateConstantBuffer(0, constantBufferData);
 
 		 //Needs constant buffer
-		 if (!test_go.Initialize("Data\\Models\\human.obj" ,device.Get(), command_list.Get(), &constantBuffer))
+		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &constantBuffer))
 			 exit(-1);
 
 		 //Create depth stencil view
@@ -620,6 +620,7 @@ void Graphics::InitPipelineState()
 	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
+	 text_mgr.ReleaseUploadResources();
 	 map->ReleaseLoadingResources();
 	 test_go.ReleaseCreationResources();
  }
@@ -669,9 +670,9 @@ void Graphics::InitPipelineState()
 		 //Draw "map"
 		 map->Render();
 
-		 text_mgr.SetTexture(0);
-		 /*command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);*/
+		 //text_mgr.SetTexture(0);
+		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
 		 //Draw model
 		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
