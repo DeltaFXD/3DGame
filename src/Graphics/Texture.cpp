@@ -8,7 +8,7 @@ Texture::Texture(D3D12_CPU_DESCRIPTOR_HANDLE handle) :
 
 }
 
-HRESULT Texture::Create(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT width, UINT height, const Color& color, aiTextureType type)
+HRESULT Texture::Create(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT width, UINT height, const void* color, aiTextureType type)
 {
 	this->type = type;
 	m_useageState = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -37,7 +37,7 @@ HRESULT Texture::Create(ID3D12Device* device, ID3D12GraphicsCommandList* command
 		return hr;
 
 	D3D12_SUBRESOURCE_DATA textResource;
-	textResource.pData = &color;
+	textResource.pData = color;
 	textResource.RowPitch = width * sizeof(Color);
 	textResource.SlicePitch = textResource.RowPitch * height;
 

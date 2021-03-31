@@ -9,6 +9,7 @@ public:
 	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ID3D12DescriptorHeap* heap, UINT start, UINT max);
 
 	int CreateTexture();
+	int CreateTexture(int width, int height,const void* data);
 
 	void SetTexture(UINT id);
 

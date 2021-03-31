@@ -13,7 +13,7 @@ class Texture
 public:
 	Texture(D3D12_CPU_DESCRIPTOR_HANDLE Handle);
 
-	HRESULT Create(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT width, UINT height, const Color& color, aiTextureType type);
+	HRESULT Create(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, UINT width, UINT height, const void* color, aiTextureType type);
 
 	void Destroy();
 	void ReleaseUploadResource();

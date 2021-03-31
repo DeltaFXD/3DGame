@@ -15,13 +15,21 @@ void TextureManager::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList*
 
 int TextureManager::CreateTexture()
 {
+	Color color = Color(255, 255, 0);
+	return CreateTexture(1, 1, &color);
+}
+
+int TextureManager::CreateTexture(int width, int height, const void* data)
+{
 	if (num_textures < (max - start))
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(heap->GetCPUDescriptorHandleForHeapStart(), start + num_textures, cbvsrvDescriptorSize);
 
 		Texture texture(handle);
 
-		texture.Create(device, command_list, 1, 1, Color(255, 255, 0), aiTextureType_DIFFUSE);
+		HRESULT hr = texture.Create(device, command_list, width, height, data, aiTextureType_DIFFUSE);
+		if (FAILED(hr))
+			return -1;
 
 		textures.push_back(texture);
 

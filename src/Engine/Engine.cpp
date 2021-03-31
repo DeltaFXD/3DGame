@@ -78,19 +78,19 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed('W'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetForwardVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(0.0f , 0.0f, cameraSpeed);
 	}
 	if (keyboard.KeyIsPressed('S'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetBackwardVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(0.0f , 0.0f, -cameraSpeed);
 	}
 	if (keyboard.KeyIsPressed('A'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetLeftVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
 	}
 	if (keyboard.KeyIsPressed('D'))
 	{
-		gfx.camera.AdjustPosition(gfx.camera.GetRightVector() * cameraSpeed);
+		gfx.camera.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
 	}
 	if (keyboard.KeyIsPressed(VK_SPACE))
 	{
@@ -122,7 +122,8 @@ void Engine::Run()
 	frames++;
 	if (timer.IsSecondPassed())
 	{
-		static std::string status = "FPS: " + std::to_string(frames) + " , UPS: " + std::to_string(updates) + "\n";
+		static std::string status = "";
+		status = "FPS: " + std::to_string(frames) + " , UPS: " + std::to_string(updates) + " , X: " + std::to_string(gfx.camera.GetPositionFloat3().z) + " , Y: " + std::to_string(gfx.camera.GetPositionFloat3().x) + "\n";
 		OutputDebugStringA(status.c_str());
 		frames = 0;
 		updates = 0;

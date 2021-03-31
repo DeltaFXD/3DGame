@@ -138,6 +138,15 @@
     <ClCompile Include="src\Engine\Level\Level.cpp">
       <Filter>Source Files\Engine\Level</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utility\PerlinNoise.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Level\Chunk.cpp">
+      <Filter>Source Files\Engine\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Level\Map.cpp">
+      <Filter>Source Files\Engine\Level</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -228,6 +237,18 @@
       <Filter>Header Files\Graphics\Buffers</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Level\Level.h">
+      <Filter>Header Files\Engine\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utility\PerlinNoise.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Level\Chunk.h">
+      <Filter>Header Files\Engine\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Level\Map.h">
+      <Filter>Header Files\Engine\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Level\MapData.h">
       <Filter>Header Files\Engine\Level</Filter>
     </ClInclude>
   </ItemGroup>

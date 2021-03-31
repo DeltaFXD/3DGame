@@ -98,6 +98,7 @@ void Graphics::Render()
 
 void Graphics::Update()
 {
+	level.Update();
 }
 
 void Graphics::Destroy()
@@ -253,6 +254,18 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\diffuse.png", m_texture2.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture2 from file.");
 
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\snow.png", m_mat1.GetAddressOf(), false);
+		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat1 from file.");
+
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\rock.png", m_mat2.GetAddressOf(), false);
+		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat2 from file.");
+
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\grass.png", m_mat3.GetAddressOf(), false);
+		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat3 from file.");
+
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\land.png", m_mat4.GetAddressOf(), false);
+		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat4 from file.");
+
 		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
 
 		uploadResourcesFinished.wait();
@@ -290,7 +303,7 @@ void Graphics::CreateDescriptorHeaps()
 		// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
 		// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
 		D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc = {};
-		cbvsrvHeapDesc.NumDescriptors = 64; //SRV + CBV
+		cbvsrvHeapDesc.NumDescriptors = 256; //SRV + CBV
 		cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -320,13 +333,17 @@ void Graphics::InitPipelineState()
 			featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 		}
 
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[2] = {};
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[3] = {};
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-		CD3DX12_ROOT_PARAMETER1 rootParameters[2] = {};
+		CD3DX12_ROOT_PARAMETER1 rootParameters[5] = {};
 		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_VERTEX);
+		rootParameters[2].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
 		//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 		//Create static sampler desc
@@ -443,66 +460,10 @@ void Graphics::InitPipelineState()
  void Graphics::InitializeScene()
  {
 	 HRESULT hr;
+
+	 wrl::ComPtr<ID3D12Resource> uploadBuffer;
+
 	 try {
-		 std::vector<Vertex> vertices;
-		 std::vector<DWORD> indices;
-
-		 float x = -8.0f;
-		 float y = -9.0f;
-		 for (int i = 0; i < 289; i++)
-		 {
-			 Vertex vertex;
-			 if (i % 17 == 0)
-			 {
-				 y += 1.0f;
-				 x = -8.0f;
-			 }
-			 vertex.pos = XMFLOAT3(x, 0.0f, y);
-			 x += 1.0f;
-			 if (i % 2 == 0) {
-				 if ((i / 17) % 2 == 0)
-				 {
-					 vertex.texCoord = XMFLOAT2(0.0f, 0.0f);
-				 }
-				 else
-				 {
-					 vertex.texCoord = XMFLOAT2(1.0f, 1.0f);
-				 }
-			 }
-			 else
-			 {
-				 if ((i / 17) % 2 == 0)
-				 {
-					 vertex.texCoord = XMFLOAT2(1.0f, 0.0f);
-				 }
-				 else
-				 {
-					 vertex.texCoord = XMFLOAT2(0.0f, 1.0f);
-				 }
-			 }
-			 vertices.push_back(vertex);
-		 }
-
-		 int z = 0;
-		 int a = 16;
-		 for (int i = 0; z < 1536; i++)
-		 {
-			 if (i != 0 && i % a == 0) {
-				 a += 17;
-				 continue;
-			 }
-			 indices.push_back(i);
-			 indices.push_back(i + 17);
-			 indices.push_back(i + 18);
-
-			 indices.push_back(i);
-			 indices.push_back(i + 18);
-			 indices.push_back(i + 1);
-			 z += 6;
-		 }
-
-		 map = new Mesh(device.Get(), command_list.Get(), vertices, indices);
-
 		 // Describe and create a SRV for the texture.
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
 		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -521,14 +482,83 @@ void Graphics::InitPipelineState()
 		 srvDesc2.Texture2D.MipLevels = 1;
 		 device->CreateShaderResourceView(m_texture2.Get(), &srvDesc2, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+		 
+		 // Describe and create a SRV for the texture.
+		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3 = {};
+		 srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		 srvDesc3.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		 srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		 srvDesc3.Texture2D.MipLevels = 1;
+		 device->CreateShaderResourceView(m_mat1.Get(), &srvDesc3, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 // Describe and create a SRV for the texture.
+		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc4 = {};
+		 srvDesc4.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		 srvDesc4.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		 srvDesc4.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		 srvDesc4.Texture2D.MipLevels = 1;
+		 device->CreateShaderResourceView(m_mat2.Get(), &srvDesc4, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 // Describe and create a SRV for the texture.
+		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc5 = {};
+		 srvDesc5.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		 srvDesc5.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		 srvDesc5.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		 srvDesc5.Texture2D.MipLevels = 1;
+		 device->CreateShaderResourceView(m_mat3.Get(), &srvDesc5, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+
+		 // Describe and create a SRV for the texture.
+		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc6 = {};
+		 srvDesc6.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		 srvDesc6.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		 srvDesc6.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		 srvDesc6.Texture2D.MipLevels = 1;
+		 device->CreateShaderResourceView(m_mat4.Get(), &srvDesc6, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
 		 //Initialize texture manager
-		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 32);
+		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 6, 128);
 
 		 text_mgr.CreateTexture();
+		 
+		 level.Initialize(4, 4, device.Get(), command_list.Get(), &camera);
+
+		 // Root Constant Buffer
+		 rootConstantBufferData.ambientLightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		 rootConstantBufferData.ambientLightStrength = 0.8f;
+
+		 const UINT cbvBufferSize = static_cast<UINT>(sizeof(CB_PS_light) + (256 - sizeof(CB_PS_light) % 256));
+
+		 // Create Root CBV
+		 hr = device->CreateCommittedResource(
+			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			 D3D12_HEAP_FLAG_NONE,
+			 &CD3DX12_RESOURCE_DESC::Buffer(cbvBufferSize),
+			 D3D12_RESOURCE_STATE_GENERIC_READ,
+			 nullptr, __uuidof(ID3D12Resource), (void**)rootConstantBuffer.GetAddressOf()
+		 );
+		 COM_ERROR_IF_FAILED(hr, "Failed to create Root CBV.");
+
+		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		 cbvDesc.BufferLocation = rootConstantBuffer->GetGPUVirtualAddress();
+		 cbvDesc.SizeInBytes = cbvBufferSize;
+		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 128, m_cbvsrvDescriptorSize);
+		 device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+
+		 CD3DX12_RANGE readRange(0, 0);
+		 UINT8* cbvDataBegin;
+		 hr = rootConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&cbvDataBegin));
+		 COM_ERROR_IF_FAILED(hr, "Failed to map root constant buffer.");
+
+		 memcpy(cbvDataBegin, &rootConstantBufferData, sizeof(rootConstantBufferData));
+
+		 rootConstantBuffer->Unmap(0, nullptr);
 
 		 //Initialize ConstantBuffer
-		 hr = constantBuffer.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 32);
+		 hr = constantBuffer.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 129);
 		 COM_ERROR_IF_FAILED(hr, "Failed to initialize ConstantBuffer.");
 
 		 constantBuffer.UpdateConstantBuffer(0, constantBufferData);
@@ -536,6 +566,8 @@ void Graphics::InitPipelineState()
 		 //Needs constant buffer
 		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &constantBuffer))
 			 exit(-1);
+
+		 test_go.AdjustPosition(10.0f, 0.0f, 10.0f);
 
 		 //Create depth stencil view
 		 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -616,12 +648,14 @@ void Graphics::InitPipelineState()
 
 	 m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 
-	 camera.SetPosition(30.0f, 30.0f, -30.0f);
-	 camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	 /*camera.SetPosition(32.0f, 10.0f, 0.0f);
+	 camera.SetLookAtPosition(XMFLOAT3(32.0f, 5.0f, 64.0f));*/
+	 camera.SetPosition(0.0f, 1.25f, -37.5f);
+	 camera.SetRotation(0.0f, 0.0f, 0.0f);
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
 	 text_mgr.ReleaseUploadResources();
-	 map->ReleaseLoadingResources();
+	 level.ReleaseCreationResources();
 	 test_go.ReleaseCreationResources();
  }
 
@@ -648,6 +682,10 @@ void Graphics::InitPipelineState()
 		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
 		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize); //Good enough for now
+		 command_list->SetGraphicsRootDescriptorTable(3, cbvsrvHandle);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+		 command_list->SetGraphicsRootConstantBufferView(2, rootConstantBuffer->GetGPUVirtualAddress());
 		 command_list->RSSetViewports(1, &m_viewport);
 		 command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -667,13 +705,17 @@ void Graphics::InitPipelineState()
 
 		 constantBuffer.SetConstantBuffer(0);
 
-		 //Draw "map"
-		 map->Render();
+		 command_list->SetGraphicsRoot32BitConstant(4, 0, 0);
+
+		 //Draw level
+		 level.Render();
 
 		 //text_mgr.SetTexture(0);
-		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
+		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle2(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvsrvDescriptorSize);
+		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle2);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
+		 command_list->SetGraphicsRoot32BitConstant(4, 1, 0);
 		 //Draw model
 		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 

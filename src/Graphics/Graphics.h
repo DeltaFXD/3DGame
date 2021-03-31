@@ -10,6 +10,7 @@
 #include "Utility/Timer.h"
 #include "GameObjects/GameObject.h"
 #include "TextureManager.h"
+#include "Engine/Level/Level.h"
 
 class Graphics
 {
@@ -38,6 +39,10 @@ private:
 	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
 	wrl::ComPtr<ID3D12Resource> m_texture;
 	wrl::ComPtr<ID3D12Resource> m_texture2;
+	wrl::ComPtr<ID3D12Resource> m_mat1;
+	wrl::ComPtr<ID3D12Resource> m_mat2;
+	wrl::ComPtr<ID3D12Resource> m_mat3;
+	wrl::ComPtr<ID3D12Resource> m_mat4;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;
@@ -59,8 +64,11 @@ private:
 	//Shaders
 	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
 	CB_VS_vertexshader constantBufferData;
+	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
+	CB_PS_light rootConstantBufferData;
 
-	Mesh* map;
+	//Mesh* map;
+	Level level;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;

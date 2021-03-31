@@ -3,7 +3,7 @@
 bool VertexShader::Initialize(std::wstring shaderpath, UINT compileFlags)
 {
 	HRESULT hr;
-	hr = D3DCompileFromFile(shaderpath.c_str(), nullptr, nullptr, "main", "vs_5_0", compileFlags, 0, &shader_buffer, nullptr);
+	hr = D3DCompileFromFile(shaderpath.c_str(), nullptr, nullptr, "main", "vs_5_1", compileFlags, 0, &shader_buffer, nullptr);
 	if (FAILED(hr))
 	{
 		std::wstring errorMsg = L"Failed to load shader: ";
@@ -28,7 +28,7 @@ ID3D12Resource* VertexShader::GetShader()
 bool PixelShader::Initialize(std::wstring shaderpath, UINT compileFlags)
 {
 	HRESULT hr;
-	hr = D3DCompileFromFile(shaderpath.c_str(), nullptr, nullptr, "main", "ps_5_0", compileFlags, 0, &shader_buffer, nullptr);
+	hr = D3DCompileFromFile(shaderpath.c_str(), nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &shader_buffer, nullptr);
 	if (FAILED(hr))
 	{
 		std::wstring errorMsg = L"Failed to load shader: ";
