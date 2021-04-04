@@ -20,6 +20,7 @@ public:
 	void SetPosition(const XMVECTOR& pos);
 	void SetPosition(const XMFLOAT3& pos);
 	void SetPosition(float x, float y, float z);
+	void SetPosition(float y);
 	void AdjustPosition(const XMVECTOR& pos);
 	void AdjustPosition(const XMFLOAT3& pos);
 	void AdjustPosition(float x, float y, float z);

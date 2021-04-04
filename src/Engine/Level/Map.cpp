@@ -20,7 +20,7 @@ Map::~Map()
 
 float Map::GetHeight(float x, float y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return 0;
+	if (x < 0 || x > width || y < 0 || y > height) return 0.0f;
 
 	int cx = static_cast<int>(x + 0.5f);
 	int cy = static_cast<int>(y + 0.5f);

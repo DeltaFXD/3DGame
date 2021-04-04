@@ -25,8 +25,16 @@ Level::~Level()
 	if (map != nullptr) delete map;
 }
 
-void Level::AddEntity(const Entity& e)
+float Level::GetHeight(float x, float y)
 {
+	if (map == nullptr) return 0.0f;
+
+	return map->GetHeight(x, y);
+}
+
+void Level::AddEntity(Entity& e)
+{
+	e.Initialize(this);
 	entities.push_back(e);
 }
 

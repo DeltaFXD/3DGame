@@ -66,6 +66,13 @@ void Camera::SetPosition(float x, float y, float z)
 	UpdateViewMatrix();
 }
 
+void Camera::SetPosition(float y)
+{
+	pos.y = y;
+	posVector = XMLoadFloat3(&pos);
+	UpdateViewMatrix();
+}
+
 void Camera::AdjustPosition(const XMVECTOR& pos)
 {
 	posVector += pos;

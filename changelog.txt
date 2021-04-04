@@ -98,3 +98,5 @@
 -Level overhaul
 -Chunk overhaul
 -Map generation overhaul
+#2021.04.04
+-Entity implementation & hit box logic

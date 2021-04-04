@@ -21,6 +21,7 @@ public:
 	void Destroy();
 	Camera camera;
 	GameObject test_go;
+	Level level;
 private:
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
@@ -66,9 +67,6 @@ private:
 	CB_VS_vertexshader constantBufferData;
 	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
 	CB_PS_light rootConstantBufferData;
-
-	//Mesh* map;
-	Level level;
 
 	VertexShader vertex_shader;
 	PixelShader pixel_shader;

@@ -10,10 +10,11 @@ class Level
 public:
 	~Level();
 	void Initialize(int width, int height, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, Camera* camera);
-	void AddEntity(const Entity& e);
+	void AddEntity(Entity& e);
 	void Update();
 	void Render();
 	void ReleaseCreationResources();
+	float GetHeight(float x, float y);
 private:
 	std::vector<Entity> entities;
 	std::vector<Chunk*> chunks;

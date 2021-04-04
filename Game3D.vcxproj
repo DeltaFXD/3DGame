@@ -19,8 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameObjects\Entities\HitBox.cpp" />
     <ClCompile Include="src\Engine\Level\Chunk.cpp" />
     <ClCompile Include="src\Engine\Level\Map.cpp" />
+    <ClCompile Include="src\Graphics\ModelManager.cpp" />
     <ClCompile Include="src\Utility\PerlinNoise.cpp" />
     <ClCompile Include="src\Engine\Level\Level.cpp" />
     <ClCompile Include="src\Graphics\Color.cpp" />
@@ -51,9 +53,11 @@
     <Text Include="changelog.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GameObjects\Entities\HitBox.h" />
     <ClInclude Include="src\Engine\Level\Chunk.h" />
     <ClInclude Include="src\Engine\Level\Map.h" />
     <ClInclude Include="src\Engine\Level\MapData.h" />
+    <ClInclude Include="src\Graphics\ModelManager.h" />
     <ClInclude Include="src\Utility\PerlinNoise.h" />
     <ClInclude Include="src\Engine\Level\Level.h" />
     <ClInclude Include="src\Graphics\Color.h" />
