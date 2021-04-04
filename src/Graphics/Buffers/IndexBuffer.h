@@ -35,7 +35,7 @@ public:
 		return count;
 	}
 
-	D3D12_INDEX_BUFFER_VIEW Get() const
+	D3D12_INDEX_BUFFER_VIEW& Get()
 	{
 		return buffer_view;
 	}
@@ -46,19 +46,25 @@ public:
 		this->count = count;
 		const UINT buffer_size = sizeof(DWORD) * count;
 
+		const CD3DX12_HEAP_PROPERTIES buffer_heap_props(D3D12_HEAP_TYPE_DEFAULT);
+		const CD3DX12_RESOURCE_DESC buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(buffer_size);
+
 		hr = device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			&buffer_heap_props,
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(buffer_size),
+			&buffer_resource_desc,
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr, __uuidof(ID3D12Resource), (void**)buffer.GetAddressOf());
 		if (FAILED(hr))
 			return hr;
 
+		const CD3DX12_HEAP_PROPERTIES upload_buffer_heap_props(D3D12_HEAP_TYPE_UPLOAD);
+		const CD3DX12_RESOURCE_DESC upload_buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(buffer_size);
+
 		hr = device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			&upload_buffer_heap_props,
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(buffer_size),
+			&upload_buffer_resource_desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr, __uuidof(ID3D12Resource), (void**)upload_buffer.GetAddressOf());
 		if (FAILED(hr))
@@ -71,7 +77,8 @@ public:
 		indexData.SlicePitch = buffer_size;
 
 		UpdateSubresources<1>(command_list, buffer.Get(), upload_buffer.Get(), 0, 0, 1, &indexData);
-		command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+		const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+		command_list->ResourceBarrier(1, &barrier);
 
 		//Initialize the index buffer view
 		buffer_view.BufferLocation = buffer->GetGPUVirtualAddress();

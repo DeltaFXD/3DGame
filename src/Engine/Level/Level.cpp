@@ -32,9 +32,9 @@ float Level::GetHeight(float x, float y)
 	return map->GetHeight(x, y);
 }
 
-void Level::AddEntity(Entity& e)
+void Level::AddEntity(Entity* e)
 {
-	e.Initialize(this);
+	e->Initialize(this);
 	entities.push_back(e);
 }
 
@@ -57,7 +57,7 @@ void Level::Update()
 
 	for (auto it = entities.begin(); it != entities.end(); it++)
 	{
-		it->Update();
+		it.operator*()->Update();
 	}
 }
 
@@ -81,6 +81,6 @@ void Level::Render()
 
 	for (auto it = entities.begin(); it != entities.end(); it++)
 	{
-		it->Render();
+		it.operator*()->Render();
 	}
 }

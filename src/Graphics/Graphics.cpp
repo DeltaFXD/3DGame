@@ -531,12 +531,14 @@ void Graphics::InitPipelineState()
 		 rootConstantBufferData.ambientLightStrength = 0.8f;
 
 		 const UINT cbvBufferSize = static_cast<UINT>(sizeof(CB_PS_light) + (256 - sizeof(CB_PS_light) % 256));
+		 const CD3DX12_HEAP_PROPERTIES rcb_heap_props(D3D12_HEAP_TYPE_UPLOAD);
+		 const CD3DX12_RESOURCE_DESC rcb_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(cbvBufferSize);
 
 		 // Create Root CBV
 		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			 &rcb_heap_props,
 			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Buffer(cbvBufferSize),
+			 &rcb_resource_desc,
 			 D3D12_RESOURCE_STATE_GENERIC_READ,
 			 nullptr, __uuidof(ID3D12Resource), (void**)rootConstantBuffer.GetAddressOf()
 		 );
@@ -580,10 +582,13 @@ void Graphics::InitPipelineState()
 		 depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
 		 depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
+		 const CD3DX12_HEAP_PROPERTIES dp_heap_props(D3D12_HEAP_TYPE_DEFAULT);
+		 const CD3DX12_RESOURCE_DESC dp_resource_desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, wWidth, wHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
 		 hr = device->CreateCommittedResource(
-			 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			 &dp_heap_props,
 			 D3D12_HEAP_FLAG_NONE,
-			 &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D24_UNORM_S8_UINT, wWidth, wHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+			 &dp_resource_desc,
 			 D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			 &depthOptimizedClearValue,
 			 __uuidof(ID3D12Resource),
@@ -690,7 +695,9 @@ void Graphics::InitPipelineState()
 		 command_list->RSSetScissorRects(1, &m_scissorRect);
 
 		 // Indicate that the back buffer will be used as a render target.
-		 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		 const auto barrier1 = CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		 command_list->ResourceBarrier(1, &barrier1);
 
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
 		 CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -723,7 +730,9 @@ void Graphics::InitPipelineState()
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12
 
 		 // Indicate that the back buffer will now be used to present.
-		 command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+		 const auto barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(render_target_view[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+		 command_list->ResourceBarrier(1, &barrier2);
 
 		 hr = command_list->Close();
 		 COM_ERROR_IF_FAILED(hr, "Failed to close CommandList.");

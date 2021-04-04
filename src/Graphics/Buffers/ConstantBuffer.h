@@ -35,10 +35,13 @@ public:
 		cbvsrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		//Create constant buffer
+		const CD3DX12_HEAP_PROPERTIES buffer_heap_props(D3D12_HEAP_TYPE_UPLOAD);
+		const CD3DX12_RESOURCE_DESC buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize * numView);
+
 		HRESULT hr = device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			&buffer_heap_props,
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize * numView),
+			&buffer_resource_desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr, __uuidof(ID3D12Resource), (void**)buffer.GetAddressOf()
 		);

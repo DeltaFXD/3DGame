@@ -100,3 +100,4 @@
 -Map generation overhaul
 #2021.04.04
 -Entity implementation & hit box logic
+-Update project for VS16.9.3

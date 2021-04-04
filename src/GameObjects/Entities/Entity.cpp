@@ -34,11 +34,3 @@ void Entity::Remove()
 {
 	removed = true;
 }
-
-void Entity::Update()
-{
-}
-
-void Entity::Render()
-{
-}
