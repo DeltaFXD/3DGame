@@ -101,3 +101,5 @@
 #2021.04.04
 -Entity implementation & hit box logic
 -Update project for VS16.9.3
+#2021.04.06
+-Added path finding, NOTE: re-used path finding logic from 2D previous game project (TODO: fix performance)

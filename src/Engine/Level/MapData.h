@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MapData_h__
+#define MapData_h__
 
 struct MapData
 {
@@ -13,3 +14,5 @@ enum MapDataFlags : unsigned char
 	OUT_OF_MAP = 0x04,
 	UNUSED = 0xF8
 };
+
+#endif // !MapData_h__
