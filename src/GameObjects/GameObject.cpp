@@ -74,6 +74,13 @@ void GameObject::SetPosition(float x, float y, float z)
 	UpdateWorldMatrix();
 }
 
+void GameObject::SetPosition(float y)
+{
+	pos.y = y;
+	posVector = XMLoadFloat3(&pos);
+	UpdateWorldMatrix();
+}
+
 void GameObject::AdjustPosition(const XMVECTOR& pos)
 {
 	posVector += pos;

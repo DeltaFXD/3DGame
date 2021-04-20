@@ -4,6 +4,7 @@
 #include "GameObjects/Entities/Entity.h"
 #include "Graphics/Camera.h"
 #include "Chunk.h"
+#include "Utility/AStar.h"
 
 class Level
 {

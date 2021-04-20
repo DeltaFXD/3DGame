@@ -16,6 +16,20 @@ void Level::Initialize(int width, int height, ID3D12Device* device, ID3D12Graphi
 			chunks.push_back(new Chunk(x, y, device, command_list, map));
 		}
 	}
+
+	Node* astar_map = new Node[map->GetMapWidth() * map->GetMapHeight()]();
+	
+	for (int x = 0; x < map->GetMapWidth(); x++)
+	{
+		for (int y = 0; y < map->GetMapHeight(); y++)
+		{
+			astar_map[x + y * map->GetMapWidth()].X = x;
+			astar_map[x + y * map->GetMapWidth()].Y = y;
+			astar_map[x + y * map->GetMapWidth()].Solid = map->IsSolid(x, y);
+		}
+	}
+
+	AStar::Initialize(astar_map, map->GetMapWidth(), map->GetMapHeight());
 }
 
 Level::~Level()

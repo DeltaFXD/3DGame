@@ -18,34 +18,31 @@ Map::~Map()
 	map = nullptr;
 }
 
+int Map::GetMapWidth()
+{
+	return width;
+}
+
+int Map::GetMapHeight()
+{
+	return height;
+}
+
 float Map::GetHeight(float x, float y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return 0.0f;
+	if (x <= 0 || x > width || y <= 0 || y > height) return 0.0f;
 
-	int cx = static_cast<int>(x + 0.5f);
-	int cy = static_cast<int>(y + 0.5f);
+	int x1 = static_cast<int>(x);
+	int y1 = static_cast<int>(y);
+	int x2 = x1 + 1;
+	int y2 = y1 + 1;
 
-	float xh, yh;
-
-	if (cx < x)
-	{
-		xh = map[cx + cy * width].height + (map[cx + 1 + cy * width].height - map[cx + cy * width].height) * (x - cx);
-	}
-	else
-	{
-		xh = map[cx + cy * width].height + (map[cx - 1 + cy * width].height - map[cx + cy * width].height) * (cx - x);
-	}
-
-	if (cy < y)
-	{
-		yh = map[cx + cy * width].height + (map[cx + (cy + 1) * width].height - map[cx + cy * width].height) * (y - cy);
-	}
-	else
-	{
-		yh = map[cx + cy * width].height + (map[cx + (cy - 1) * width].height - map[cx + cy * width].height) * (cy - y);
-	}
-
-	return (xh + yh) / 2.0f;
+	float q11 = map[x1 + y1 * width].height;
+	float q12 = map[x1 + y2 * width].height;
+	float q21 = map[x2 + y1 * width].height;
+	float q22 = map[x2 + y2 * width].height;
+	
+	return ((x2 - x) * (q11 * (y2 - y) + q12 * (y - y1)) + (x - x1) * (q21 * (y2 - y) + q22 * (y - y1)));
 }
 
 float Map::GetHeight(int x, int y)
@@ -84,7 +81,7 @@ void Map::Generate()
 			float perlin = 0.0f;
 			float amp = 10.0f;
 			float freq = 1.0f;
-			for (int d = 0; d < 10; d++)
+			for (int d = 0; d < 20; d++)
 			{
 				float sX = x / scale * freq;
 				float yX = y / scale * freq;
@@ -92,7 +89,15 @@ void Map::Generate()
 				amp *= 0.5f;
 				freq *= 2.0f;
 			}
-			perlin = std::max(-2.5f, perlin);
+			//perlin = std::max(-2.5f, perlin);
+			/*if ((rand() % 100 + 1) < 10)
+			{
+				map[x + y * width].height = 1.0;
+			}
+			else
+			{
+				map[x + y * width].height = 1.0;
+			}*/
 			map[x + y * width].height = perlin;
 			if (x == (width - 1) || y == (height - 1))
 			{

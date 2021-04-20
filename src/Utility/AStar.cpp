@@ -37,7 +37,8 @@ void AStar::Initialize(Node* map, int mapWidth, int mapHeight)
 
 #ifdef _DEBUG //Debug mode
 	//TODO: file logging
-	std::cout << "AStar initialized.";
+	std::string debugmsg = "AStar initialized.\n";
+	OutputDebugStringA(debugmsg.c_str());
 #endif
 }
 
@@ -82,7 +83,8 @@ std::vector<XMFLOAT2> AStar::FindPath(float xStart, float yStart, float xEnd, fl
 	if (xEnd < 0 || xEnd > s_mapWidth || yEnd < 0 || yEnd > s_mapHeight)
 	{
 #ifdef _DEBUG //Debug mode
-		std::cout << "Returning because destination out of the map.";
+		std::string debugmsg = "Returning because destination out of the map.\n";
+		OutputDebugStringA(debugmsg.c_str());
 #endif
 		return path;
 	}
@@ -91,7 +93,8 @@ std::vector<XMFLOAT2> AStar::FindPath(float xStart, float yStart, float xEnd, fl
 		if (s_map[(int)xEnd + (int)yEnd * s_mapWidth].Solid)
 		{
 #ifdef _DEBUG //Debug mode
-			std::cout << "Returning because destination unreachable.";
+			std::string debugmsg = "Returning because destination unreachable.\n";
+			OutputDebugStringA(debugmsg.c_str());
 #endif
 			return path;
 		}
@@ -203,5 +206,5 @@ void AStar::AddNeigborsToOpenList()
 
 double AStar::Distance(float x, float y)
 {
-	return std::sqrt(std::pow(s_current->X + x - s_xEnd, 2) + std::pow(s_current->Y + y - s_yEnd, 2));
+	return sqrt(pow(s_current->X + x - s_xEnd, 2) + pow(s_current->Y + y - s_yEnd, 2));
 }

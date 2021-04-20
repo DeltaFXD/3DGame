@@ -569,7 +569,7 @@ void Graphics::InitPipelineState()
 		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &constantBuffer))
 			 exit(-1);
 
-		 test_go.AdjustPosition(10.0f, 0.0f, 10.0f);
+		 test_go.AdjustPosition(0.0f, 0.0f, 0.0f);
 
 		 //Create depth stencil view
 		 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};

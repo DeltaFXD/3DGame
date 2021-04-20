@@ -10,6 +10,8 @@ struct Node
 	int Y;
 	bool Solid;
 
+	Node() : Parent(nullptr), X(0), Y(0), Solid(false), G(0.0), H(0.0) {}
+
 	Node(int x, int y, bool solid) : Parent(nullptr), X(x), Y(y), Solid(solid), G(0.0), H(0.0) {}
 
 	Node(Node* parent, int x, int y, bool solid, double g, double h) : Parent(parent), X(x), Y(y), Solid(solid), G(g), H(h) {}

@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
-#include <iostream>
 #include <algorithm>
+#include <math.h>
 #include <DirectXMath.h>
+#include "Utility/ErrorLogger.h"
 #include "Node.h"
 
 using namespace DirectX;

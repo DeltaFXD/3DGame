@@ -109,3 +109,5 @@
 -Redesign AStar path finding data structure, remove unnecessary re-allocation - 80%
 #2021.04.16
 -AStar redesign finished, TODO: testing
+#2021.04.18
+-Fix height map interpolation (removed old interpolation, added bilinear interpolation for height map)

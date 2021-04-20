@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "Utility/PerlinNoise.h"
 #include "MapData.h"
+#include "Utility/ErrorLogger.h"
 
 class Map 
 {
@@ -16,6 +17,9 @@ public:
 	float GetHeight(int x, int y);
 	bool IsSolid(float x, float y);
 	bool IsPenetrable(float x, float y);
+
+	int GetMapWidth();
+	int GetMapHeight();
 private:
 	void Generate();
 
