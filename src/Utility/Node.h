@@ -6,28 +6,17 @@ struct Node
 	double G;
 	double H;
 	Node* Parent;
-	float X;
-	float Y;
+	int X;
+	int Y;
+	bool Solid;
 
-	Node(Node* parent, float x, float y, double g, double h) : Parent(parent), X(x), Y(y), G(g), H(h) {}
+	Node(int x, int y, bool solid) : Parent(nullptr), X(x), Y(y), Solid(solid), G(0.0), H(0.0) {}
 
-	int CompareTo(Node* other)
+	Node(Node* parent, int x, int y, bool solid, double g, double h) : Parent(parent), X(x), Y(y), Solid(solid), G(g), H(h) {}
+
+	static bool CompareNodeToNode(Node* a, Node* b)
 	{
-		return (int)(G + H - (other->G + other->H));
-	}
-
-	bool Equals(Node* other)
-	{
-		if (other == nullptr) return false;
-
-		if ((G + H - (other->G + other->H)) == 0)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return (a->G + a->H) < (b->G + b->H);
 	}
 };
 

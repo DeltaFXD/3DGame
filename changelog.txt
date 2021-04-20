@@ -103,3 +103,9 @@
 -Update project for VS16.9.3
 #2021.04.06
 -Added path finding, NOTE: re-used path finding logic from 2D previous game project (TODO: fix performance)
+#2021.04.11
+-ModelManager memory handling refactor - 70%
+#2021.04.14
+-Redesign AStar path finding data structure, remove unnecessary re-allocation - 80%
+#2021.04.16
+-AStar redesign finished, TODO: testing

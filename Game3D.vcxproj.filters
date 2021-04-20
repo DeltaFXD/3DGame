@@ -282,7 +282,7 @@
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
     <ClInclude Include="src\Utility\Node.h">
-      <Filter>Source Files\Utility</Filter>
+      <Filter>Header Files\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
