@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameObjects\Entities\Characters\NPC.cpp" />
+    <ClCompile Include="src\GameObjects\Entities\Characters\Player.cpp" />
     <ClCompile Include="src\GameObjects\Entities\HitBox.cpp" />
     <ClCompile Include="src\Engine\Level\Chunk.cpp" />
     <ClCompile Include="src\Engine\Level\Map.cpp" />
@@ -54,6 +56,8 @@
     <Text Include="changelog.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GameObjects\Entities\Characters\NPC.h" />
+    <ClInclude Include="src\GameObjects\Entities\Characters\Player.h" />
     <ClInclude Include="src\GameObjects\Entities\HitBox.h" />
     <ClInclude Include="src\Engine\Level\Chunk.h" />
     <ClInclude Include="src\Engine\Level\Map.h" />

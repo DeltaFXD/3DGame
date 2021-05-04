@@ -42,6 +42,7 @@ float Map::GetHeight(float x, float y)
 	float q21 = map[x2 + y1 * width].height;
 	float q22 = map[x2 + y2 * width].height;
 	
+	//Bilinear interpolation
 	return ((x2 - x) * (q11 * (y2 - y) + q12 * (y - y1)) + (x - x1) * (q21 * (y2 - y) + q22 * (y - y1)));
 }
 

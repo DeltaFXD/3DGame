@@ -111,3 +111,5 @@
 -AStar redesign finished, TODO: testing
 #2021.04.18
 -Fix height map interpolation (removed old interpolation, added bilinear interpolation for height map)
+#2021.05.04
+-Major refactor in graphics pipeline

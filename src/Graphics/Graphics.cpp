@@ -34,6 +34,62 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	return true;
 }
 
+void Graphics::MoveToNextFrame()
+{
+	HRESULT hr;
+
+	const UINT64 m_fenceCurrentValue = m_fenceValue[m_frameIndex];
+	//Signal and increment the fence value.
+	hr = command_queue->Signal(m_fence.Get(), m_fenceCurrentValue);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to signal.");
+		exit(-1);
+	}
+
+	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
+
+	// Wait until the previous frame is finished.
+	if (m_fence->GetCompletedValue() < m_fenceValue[m_frameIndex])
+	{
+		hr = m_fence->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to wait for fence.");
+			exit(-1);
+		}
+
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+
+	// Set fence value for the next frame
+	m_fenceValue[m_frameIndex] = m_fenceCurrentValue + 1;
+}
+
+void Graphics::WaitForGPU()
+{
+	HRESULT hr;
+
+	// Schedule a signal command in queue
+	hr = command_queue->Signal(m_fence.Get(), m_fenceValue[m_frameIndex]);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to signal.");
+		exit(-1);
+	}
+
+	hr = m_fence->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to wait for fence.");
+		exit(-1);
+	}
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+
+	// Increment fence value for current frame
+	m_fenceValue[m_frameIndex]++;
+}
+
 void Graphics::Render()
 {
 	HRESULT hr;
@@ -69,31 +125,7 @@ void Graphics::Render()
 		exit(-1);
 	}
 
-	m_fencePrevValue = m_fenceValue;
-	//Signal and increment the fence value.
-	hr = command_queue->Signal(m_fence.Get(), m_fenceValue);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to signal.");
-		exit(-1);
-	}
-
-	m_fenceValue++;
-
-	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < m_fencePrevValue)
-	{
-		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to wait for fence.");
-			exit(-1);
-		}
-
-		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
-
-	m_frameIndex = swapchain->GetCurrentBackBufferIndex();
+	MoveToNextFrame();
 }
 
 void Graphics::Update()
@@ -103,20 +135,25 @@ void Graphics::Update()
 
 void Graphics::Destroy()
 {
+	// Ensure that the GPU is no longer holding resources that are about to be cleaned up.
+	WaitForGPU();
+	MoveToNextFrame();
+	WaitForGPU();
+
+	CloseHandle(m_fenceEvent);
+
+#ifdef _DEBUG
 	HRESULT hr;
-
-	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < m_fencePrevValue)
+	IDXGIDebug1* debug = nullptr;
+	hr = DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&debug);
+	if (FAILED(hr))
 	{
-		hr = m_fence->SetEventOnCompletion(m_fencePrevValue, m_fenceEvent);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to wait for fence.");
-			exit(-1);
-		}
-
-		WaitForSingleObject(m_fenceEvent, INFINITE);
+		ErrorLogger::Log(hr, "Failed to get debug interface.");
+		exit(-1);
 	}
+	debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+	debug->Release();
+#endif // _DEBUG
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd)
@@ -125,7 +162,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	if (IsDebuggerPresent() == TRUE)
 	{
 #ifdef _DEBUG //Debug mode
-		wrl::ComPtr<ID3D12Debug> debug_controller;
 		if (SUCCEEDED(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debug_controller.GetAddressOf())))
 		{
 			debug_controller.Get()->EnableDebugLayer();
@@ -186,7 +222,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.SampleDesc.Quality = 0;
 
 		scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		scd.BufferCount = Config::GetBufferFrameCount();
+		scd.BufferCount = FRAME_COUNT;
 		scd.Scaling = DXGI_SCALING_STRETCH;
 		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		scd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
@@ -239,8 +275,12 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		rtvHandle.Offset(1, m_rtvDescriptorSize);
 		//---------frame 1 end
 
-		hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)command_allocator.GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to create ID3D12CommandAllocator.");
+		// Create command allocators for each frame
+		for (UINT i = 0; i < FRAME_COUNT; i++)
+		{
+			hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)command_allocator[i].GetAddressOf());
+			COM_ERROR_IF_FAILED(hr, "Failed to create ID3D12CommandAllocator.");
+		}
 
 		graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
 
@@ -284,7 +324,7 @@ void Graphics::CreateDescriptorHeaps()
 		HRESULT hr;
 		// Describe and create a render target view (RTV) descriptor heap.
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-		rtvHeapDesc.NumDescriptors = Config::GetBufferFrameCount();
+		rtvHeapDesc.NumDescriptors = FRAME_COUNT;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
@@ -447,8 +487,9 @@ void Graphics::InitPipelineState()
 		hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
 
-		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
+		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create CommandList.");
+		command_list->SetName(L"Command List");
 	}
 	catch (COMException& e)
 	{
@@ -606,10 +647,10 @@ void Graphics::InitPipelineState()
 		 command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 		 // Create synchronization objects and wait until assets have been uploaded to the GPU.
-		 hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
+		 hr = device->CreateFence(m_fenceValue[m_frameIndex], D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)m_fence.GetAddressOf());
 		 COM_ERROR_IF_FAILED(hr, "Failed to create synchronization object.");
 
-		 m_fenceValue = 1;
+		 m_fenceValue[m_frameIndex] = 1;
 
 		 // Create an event handle to use for frame synchronization.
 		 m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -628,9 +669,9 @@ void Graphics::InitPipelineState()
 	 // Wait for the command list to execute; we are reusing the same command 
 	 // list in our main loop but for now, we just want to wait for setup to 
 	 // complete before continuing.
-
+	 WaitForGPU();
 	 //Signal and increment the fence value.
-	 const UINT64 fenceToWaitFor = m_fenceValue;
+	 /*const UINT64 fenceToWaitFor = m_fenceValue;
 	 hr = command_queue->Signal(m_fence.Get(), fenceToWaitFor);
 	 if (FAILED(hr))
 	 {
@@ -651,7 +692,7 @@ void Graphics::InitPipelineState()
 	 else
 		 exit(-1);
 
-	 m_frameIndex = swapchain->GetCurrentBackBufferIndex();
+	 m_frameIndex = swapchain->GetCurrentBackBufferIndex();*/
 
 	 /*camera.SetPosition(32.0f, 10.0f, 0.0f);
 	 camera.SetLookAtPosition(XMFLOAT3(32.0f, 5.0f, 64.0f));*/
@@ -671,12 +712,12 @@ void Graphics::InitPipelineState()
 		 // Command list allocators can only be reset when the associated 
 		 // command lists have finished execution on the GPU; apps should use 
 		 // fences to determine GPU execution progress.
-		 hr = command_allocator->Reset();
+		 hr = command_allocator[m_frameIndex]->Reset();
 		 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandAllocator.");
 
 		 // However, when ExecuteCommandList() is called on a particular command 
 		 // list, that command list can then be reset at any time and must be before re-recording.
-		 hr = command_list->Reset(command_allocator.Get(), pipeline_state.Get());
+		 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state.Get());
 		 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandList.");
 
 		 // Set necessary state.

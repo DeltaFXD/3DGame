@@ -43,18 +43,22 @@ HRESULT Texture::Create(ID3D12Device* device, ID3D12GraphicsCommandList* command
 
 	//Upload to GPU
 	UINT64 bufferSize = GetRequiredIntermediateSize(m_texture.Get(), 0, 1);
-	
+	const CD3DX12_HEAP_PROPERTIES upload_heap_props(D3D12_HEAP_TYPE_UPLOAD);
+	const CD3DX12_RESOURCE_DESC upload_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+
 	hr = device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		&upload_heap_props,
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+		&upload_resource_desc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, __uuidof(ID3D12Resource), (void**)m_upload.GetAddressOf());
 	if (FAILED(hr))
 		return hr;
 
+	const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+
 	UpdateSubresources(command_list, m_texture.Get(), m_upload.Get(), 0, 0, 1, &textResource);
-	command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+	command_list->ResourceBarrier(1, &barrier);
 
 	//Create SRV
 	device->CreateShaderResourceView(m_texture.Get(), nullptr, m_cpu_handle);

@@ -11,6 +11,7 @@
 #include "GameObjects/GameObject.h"
 #include "TextureManager.h"
 #include "Engine/Level/Level.h"
+#include <dxgidebug.h>
 
 class Graphics
 {
@@ -28,16 +29,20 @@ private:
 	void CreateDescriptorHeaps();
 	void InitPipelineState();
 	void PopulateCommandList();
+	void MoveToNextFrame();
+	void WaitForGPU();
+
+	static const UINT FRAME_COUNT = 2;
 
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
-	wrl::ComPtr<ID3D12CommandAllocator> command_allocator;
+	wrl::ComPtr<ID3D12CommandAllocator> command_allocator[FRAME_COUNT];
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
 	wrl::ComPtr<IDXGISwapChain3> swapchain;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
 	//Resources
-	wrl::ComPtr<ID3D12Resource> render_target_view[2]; //TEMP TODO: FIX
+	wrl::ComPtr<ID3D12Resource> render_target_view[FRAME_COUNT];
 	wrl::ComPtr<ID3D12Resource> m_texture;
 	wrl::ComPtr<ID3D12Resource> m_texture2;
 	wrl::ComPtr<ID3D12Resource> m_mat1;
@@ -53,6 +58,7 @@ private:
 	//Debug mode
 #ifdef _DEBUG
 	wrl::ComPtr<ID3D12InfoQueue> info;
+	wrl::ComPtr<ID3D12Debug> debug_controller;
 #endif
 	UINT m_rtvDescriptorSize;
 	UINT m_cbvsrvDescriptorSize;
@@ -73,8 +79,7 @@ private:
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;
-	UINT64 m_fenceValue;
-	UINT64 m_fencePrevValue;
+	UINT64 m_fenceValue[FRAME_COUNT];
 	HANDLE m_fenceEvent;
 	UINT m_frameIndex;
 

@@ -64,17 +64,17 @@
     <Filter Include="Source Files\Engine\Level">
       <UniqueIdentifier>{552c423d-3d08-497e-b44f-c3079aa8006d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\GameObjects\Entities\Mobs">
-      <UniqueIdentifier>{83f8c5e6-133f-4d11-9e73-fe44608987d3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\GameObjects\Entities\Projectiles">
       <UniqueIdentifier>{55483fb3-48a6-48e1-9b2e-c6d5b858021f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\GameObjects\Entities\Mobs">
-      <UniqueIdentifier>{e66f0390-e528-483c-bcc3-2858272aecb2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\GameObjects\Entities\Projectiles">
       <UniqueIdentifier>{7aec8c26-d226-4740-82a9-d7abcee1260b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameObjects\Entities\Characters">
+      <UniqueIdentifier>{83f8c5e6-133f-4d11-9e73-fe44608987d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameObjects\Entities\Characters">
+      <UniqueIdentifier>{e66f0390-e528-483c-bcc3-2858272aecb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +167,12 @@
     </ClCompile>
     <ClCompile Include="src\Utility\AStar.cpp">
       <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObjects\Entities\Characters\Player.cpp">
+      <Filter>Source Files\GameObjects\Entities\Characters</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObjects\Entities\Characters\NPC.cpp">
+      <Filter>Source Files\GameObjects\Entities\Characters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -283,6 +289,12 @@
     </ClInclude>
     <ClInclude Include="src\Utility\Node.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameObjects\Entities\Characters\Player.h">
+      <Filter>Header Files\GameObjects\Entities\Characters</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameObjects\Entities\Characters\NPC.h">
+      <Filter>Header Files\GameObjects\Entities\Characters</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
