@@ -16,14 +16,33 @@
 class Graphics
 {
 public:
-	bool Initialize(HWND hwnd, int width, int height);
+	Graphics(Graphics const&) = delete;
+	void operator=(Graphics const&) = delete;
+
+	static bool Initialize(HWND hwnd, int width, int height);
+	static void Destroy();
+	static Graphics* Get();
+
 	void Render();
 	void Update();
-	void Destroy();
+	void ChangeFillMode(bool state);
+	int GetWidth();
+	int GetHeight();
+
 	Camera camera;
 	GameObject test_go;
 	Level level;
+	Mesh* testT = nullptr;
 private:
+	static const UINT FRAME_COUNT = 2;
+
+	static Graphics* instance;
+	static bool initialized;
+
+	bool solid = true;
+
+	Graphics(HWND hwnd, int width, int height);
+
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
 	void CreateDescriptorHeaps();
@@ -32,8 +51,6 @@ private:
 	void MoveToNextFrame();
 	void WaitForGPU();
 
-	static const UINT FRAME_COUNT = 2;
-
 	wrl::ComPtr<ID3D12Device> device;
 	wrl::ComPtr<ID3D12CommandQueue> command_queue;
 	wrl::ComPtr<ID3D12CommandAllocator> command_allocator[FRAME_COUNT];
@@ -41,6 +58,8 @@ private:
 	wrl::ComPtr<IDXGISwapChain3> swapchain;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
+	wrl::ComPtr<ID3D12PipelineState> pipeline_state_quad;
+	wrl::ComPtr<ID3D12PipelineState> pipeline_state_wireframe;
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[FRAME_COUNT];
 	wrl::ComPtr<ID3D12Resource> m_texture;
@@ -60,28 +79,33 @@ private:
 	wrl::ComPtr<ID3D12InfoQueue> info;
 	wrl::ComPtr<ID3D12Debug> debug_controller;
 #endif
-	UINT m_rtvDescriptorSize;
-	UINT m_cbvsrvDescriptorSize;
+	UINT m_rtvDescriptorSize = 0;
+	UINT m_cbvsrvDescriptorSize = 0;
 
-	D3D12_VIEWPORT m_viewport;
-	D3D12_RECT m_scissorRect;
+	D3D12_VIEWPORT m_viewport = D3D12_VIEWPORT();
+	D3D12_RECT m_scissorRect = D3D12_RECT();
 
 	TextureManager text_mgr;
 
 	//Shaders
 	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
-	CB_VS_vertexshader constantBufferData;
+	CB_VS_vertexshader constantBufferData = CB_VS_vertexshader();
 	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
-	CB_PS_light rootConstantBufferData;
+	CB_PS_light rootConstantBufferData = CB_PS_light();
 
-	VertexShader vertex_shader;
-	PixelShader pixel_shader;
+	Shader vertex_shader;
+	Shader pixel_shader;
+
+	Shader terrainVS;
+	Shader terrainPS;
+	Shader terrainDS;
+	Shader terrainHS;
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;
-	UINT64 m_fenceValue[FRAME_COUNT];
-	HANDLE m_fenceEvent;
-	UINT m_frameIndex;
+	UINT64 m_fenceValue[FRAME_COUNT] = {0,0}; //Better way?
+	HANDLE m_fenceEvent = nullptr;
+	UINT m_frameIndex = 0;
 
 	std::unique_ptr<DirectX::GraphicsMemory> graphicsMemory;
 

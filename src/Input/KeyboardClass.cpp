@@ -5,12 +5,18 @@ KeyboardClass::KeyboardClass()
 	for (int i = 0; i < 256; i++)
 	{
 		this->keyStates[i] = false; //Initialze all key states to off (false)
+		this->keyToggleStates[i] = false; //Initialize all key toggle states to off (false);
 	}
 }
 
 bool KeyboardClass::KeyIsPressed(const unsigned char keycode)
 {
 	return this->keyStates[keycode];
+}
+
+bool KeyboardClass::KeyIsToggled(const unsigned char keycode)
+{
+	return this->keyToggleStates[keycode];
 }
 
 bool KeyboardClass::KeyBufferIsEmpty()
@@ -53,6 +59,10 @@ unsigned char KeyboardClass::ReadChar()
 
 void KeyboardClass::OnKeyPressed(const unsigned char key)
 {
+	if (!this->keyStates[key])
+	{
+		this->keyToggleStates[key] = !this->keyToggleStates[key];
+	}
 	this->keyStates[key] = true;
 	this->keyBuffer.push(KeyboardEvent(KeyboardEvent::EventType::Press, key));
 }

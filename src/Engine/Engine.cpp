@@ -7,10 +7,12 @@ bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::stri
 		return false;
 	}
 
-	if (gfx.Initialize(this->render_window.GetHWND(), width, height))
+	if (Graphics::Initialize(this->render_window.GetHWND(), width, height))
 	{
+		gfx = Graphics::Get();
 		return false;
 	}
+
 	timer.Set();
 	return true;
 }
@@ -54,8 +56,18 @@ void Engine::Update()
 		{
 			if (e.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
-				gfx.camera.AdjustRotation((float)e.GetPosY() * 0.0001f, (float)e.GetPosX() * 0.0001f, 0.0f);
+				gfx->camera.AdjustRotation((float)e.GetPosY() * 0.0001f, (float)e.GetPosX() * 0.0001f, 0.0f);
 			}
+		}
+		if (e.GetType() == MouseEvent::EventType::WheelUp)
+		{
+			fov--;
+			gfx->camera.SetProjectionValues(fov, static_cast<float>(gfx->GetWidth()) / static_cast<float>(gfx->GetHeight()), 0.1f, 1000.0f);
+		}
+		else if (e.GetType() == MouseEvent::EventType::WheelDown)
+		{
+			fov++;
+			gfx->camera.SetProjectionValues(fov, static_cast<float>(gfx->GetWidth()) / static_cast<float>(gfx->GetHeight()), 0.1f, 1000.0f);
 		}
 	}
 	static float cameraSpeed = 0.03f;
@@ -67,67 +79,74 @@ void Engine::Update()
 	{
 		cameraSpeed = 0.03f;
 	}
+
+	if (keyboard.KeyIsPressed('Z'))
+	{
+		gfx->ChangeFillMode(keyboard.KeyIsToggled('Z'));
+	}
 	
 	if (keyboard.KeyIsPressed(VK_RIGHT))
 	{
-		gfx.test_go.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
+		gfx->test_go.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_LEFT))
 	{
-		gfx.test_go.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
+		gfx->test_go.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_UP))
 	{
-		gfx.test_go.AdjustPosition(0.0f, 0.0f, cameraSpeed);
+		gfx->test_go.AdjustPosition(0.0f, 0.0f, cameraSpeed);
 	}
 
 	if (keyboard.KeyIsPressed(VK_DOWN))
 	{
-		gfx.test_go.AdjustPosition(0.0f, 0.0f, -cameraSpeed);
+		gfx->test_go.AdjustPosition(0.0f, 0.0f, -cameraSpeed);
 	}
-	gfx.test_go.SetPosition(gfx.level.GetHeight(gfx.test_go.GetPositionFloat3().x, gfx.test_go.GetPositionFloat3().z) + 0.1f);
+	gfx->test_go.SetPosition(gfx->level.GetHeight(gfx->test_go.GetPositionFloat3().x, gfx->test_go.GetPositionFloat3().z) + 0.01f);
 
 	if (keyboard.KeyIsPressed('W'))
 	{
-		gfx.camera.AdjustPosition(0.0f , 0.0f, cameraSpeed);
+		gfx->camera.AdjustPosition(0.0f , 0.0f, cameraSpeed);
 	}
 	if (keyboard.KeyIsPressed('S'))
 	{
-		gfx.camera.AdjustPosition(0.0f , 0.0f, -cameraSpeed);
+		gfx->camera.AdjustPosition(0.0f , 0.0f, -cameraSpeed);
 	}
 	if (keyboard.KeyIsPressed('A'))
 	{
-		gfx.camera.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
+		gfx->camera.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
 	}
 	if (keyboard.KeyIsPressed('D'))
 	{
-		gfx.camera.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
+		gfx->camera.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
 	}
 	if (keyboard.KeyIsPressed(VK_SPACE))
 	{
-		gfx.camera.AdjustPosition(0.0f, cameraSpeed, 0.0f);
+		gfx->camera.AdjustPosition(0.0f, cameraSpeed, 0.0f);
 	}
 	if (keyboard.KeyIsPressed('X'))
 	{
-		gfx.camera.AdjustPosition(0.0f, -cameraSpeed, 0.0f);
+		gfx->camera.AdjustPosition(0.0f, -cameraSpeed, 0.0f);
 	}
 	if (keyboard.KeyIsPressed(VK_CONTROL))
 	{
-		gfx.camera.SetPosition(gfx.level.GetHeight(gfx.camera.GetPositionFloat3().x, gfx.camera.GetPositionFloat3().z) + 1.0f);
+		gfx->camera.SetPosition(gfx->level.GetHeight(gfx->camera.GetPositionFloat3().x, gfx->camera.GetPositionFloat3().z) + 1.0f);
 	}
 
-	gfx.Update();
+	gfx->Update();
 }
 
 void Engine::Render()
 {
-	gfx.Render();
+	gfx->Render();
 }
 
 void Engine::Run()
 {
+	if (gfx == nullptr) return;
+
 	delta += timer.GetDelta();
 	while (delta >= 1)
 	{
@@ -140,7 +159,12 @@ void Engine::Run()
 	if (timer.IsSecondPassed())
 	{
 		static std::string status = "";
-		status = "FPS: " + std::to_string(frames) + " , UPS: " + std::to_string(updates) + " , X: " + std::to_string(gfx.camera.GetPositionFloat3().z) + " , Y: " + std::to_string(gfx.camera.GetPositionFloat3().x) + " , Z: " + std::to_string(gfx.camera.GetPositionFloat3().y) + "\n";
+		status = "FPS: " + std::to_string(frames) + 
+			" , UPS: " + std::to_string(updates) + 
+			" , FoV: " + std::to_string(fov) +
+			" , X: " + std::to_string(gfx->camera.GetPositionFloat3().z) + 
+			" , Y: " + std::to_string(gfx->camera.GetPositionFloat3().x) + 
+			" , Z: " + std::to_string(gfx->camera.GetPositionFloat3().y) + "\n";
 		OutputDebugStringA(status.c_str());
 		frames = 0;
 		updates = 0;

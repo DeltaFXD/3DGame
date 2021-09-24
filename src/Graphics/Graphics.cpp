@@ -1,8 +1,13 @@
 #include "Graphics.h"
 #include "Utility/Config.h"
 
-bool Graphics::Initialize(HWND hwnd, int width, int height)
+bool Graphics::initialized = false;
+Graphics* Graphics::instance = nullptr;
+
+Graphics::Graphics(HWND hwnd, int width, int height)
 {
+	initialized = true;
+
 	//Set viewport
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -17,19 +22,53 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	m_scissorRect.right = static_cast<LONG>(width);
 	m_scissorRect.bottom = static_cast<LONG>(height);
 
-	constantBufferData.mat = DirectX::XMMatrixIdentity();
+	constantBufferData.world = DirectX::XMMatrixIdentity();
+	constantBufferData.viewProj = DirectX::XMMatrixIdentity();
+	constantBufferData.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	wWidth = width;
 	wHeight = height;
+}
 
-	if (!InitializeDirectX(hwnd))
+int Graphics::GetHeight()
+{
+	return wHeight;
+}
+
+int Graphics::GetWidth()
+{
+	return wWidth;
+}
+
+Graphics* Graphics::Get()
+{
+	if (initialized)
 	{
+		return instance;
+	}
+	else
+	{
+		ErrorLogger::Log("Tried to access graphics object before initialization.");
+		return nullptr;
+	}
+}
+
+bool Graphics::Initialize(HWND hwnd, int width, int height)
+{
+	if (initialized) return false;
+
+	instance = new Graphics(hwnd, width, height);
+
+	if (!instance->InitializeDirectX(hwnd))
+	{
+		initialized = false;
+		delete instance;
 		return false;
 	}
 
-	InitPipelineState();
+	instance->InitPipelineState();
 	//Prepare scene
-	InitializeScene();
+	instance->InitializeScene();
 
 	return true;
 }
@@ -90,6 +129,11 @@ void Graphics::WaitForGPU()
 	m_fenceValue[m_frameIndex]++;
 }
 
+void Graphics::ChangeFillMode(bool state)
+{
+	solid = state;
+}
+
 void Graphics::Render()
 {
 	HRESULT hr;
@@ -97,8 +141,10 @@ void Graphics::Render()
 	//Update constant buffer
 	XMMATRIX world = XMMatrixIdentity();
 
-	constantBufferData.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
-	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
+	constantBufferData.world = XMMatrixTranspose(world);
+	constantBufferData.viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();;
+	constantBufferData.viewProj = XMMatrixTranspose(constantBufferData.viewProj);
+	constantBufferData.eyePos = camera.GetPositionFloat3();
 
 	constantBuffer.UpdateConstantBuffer(0, constantBufferData);
 
@@ -135,12 +181,19 @@ void Graphics::Update()
 
 void Graphics::Destroy()
 {
+	if (!initialized) return;
 	// Ensure that the GPU is no longer holding resources that are about to be cleaned up.
-	WaitForGPU();
-	MoveToNextFrame();
-	WaitForGPU();
+	instance->WaitForGPU();
+	instance->MoveToNextFrame();
+	instance->WaitForGPU();
 
-	CloseHandle(m_fenceEvent);
+	CloseHandle(instance->m_fenceEvent);
+
+	if (instance->testT != nullptr)
+	{
+		delete instance->testT;
+		instance->testT = nullptr;
+	}
 
 #ifdef _DEBUG
 	HRESULT hr;
@@ -154,6 +207,9 @@ void Graphics::Destroy()
 	debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 	debug->Release();
 #endif // _DEBUG
+
+	initialized = false;
+	delete instance;
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd)
@@ -294,16 +350,16 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\diffuse.png", m_texture2.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture2 from file.");
 
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\snow.png", m_mat1.GetAddressOf(), false);
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\snow2.png", m_mat1.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat1 from file.");
 
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\rock.png", m_mat2.GetAddressOf(), false);
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\rock2.png", m_mat2.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat2 from file.");
 
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\grass.png", m_mat3.GetAddressOf(), false);
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\grass2.png", m_mat3.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat3 from file.");
 
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\land.png", m_mat4.GetAddressOf(), false);
+		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\land2.png", m_mat4.GetAddressOf(), false);
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat4 from file.");
 
 		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
@@ -380,8 +436,8 @@ void Graphics::InitPipelineState()
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[5] = {};
 		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_VERTEX);
-		rootParameters[2].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[2].InitAsConstantBufferView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
@@ -424,26 +480,26 @@ void Graphics::InitPipelineState()
 		{
 #ifdef _DEBUG //Debug mode
 #ifdef _WIN64 //x64
-			shaderfolder = L"";
+			shaderfolder = L"Shaders\\";
 #else	//x86 (Win32)
-			shaderfolder = L"";
+			shaderfolder = L"Shaders\\";
 #endif //Release Mode
 #else
 #ifdef _WIN64 //x64
-			shaderfolder = L"";
+			shaderfolder = L"Shaders\\";
 #else	//x86 (Win32)
-			shaderfolder = L"";
+			shaderfolder = L"Shaders\\";
 #endif
 #endif 
 		}
 
 		std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
-		if (!vertex_shader.Initialize(vertexPath, compileFlags))
+		if (!vertex_shader.Initialize(vertexPath, "main", ShaderType::VS, compileFlags))
 		{
 			exit(-1);
 		}
 		std::wstring pixelPath = shaderfolder + L"pixelshader.hlsl";
-		if (!pixel_shader.Initialize(pixelPath, compileFlags))
+		if (!pixel_shader.Initialize(pixelPath, "main", ShaderType::PS, compileFlags))
 		{
 			exit(-1);
 		}
@@ -487,9 +543,75 @@ void Graphics::InitPipelineState()
 		hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
 
+		
+		
+		std::wstring terrainPath = shaderfolder + L"terrainTessellation.hlsl";
+		if (!terrainVS.Initialize(terrainPath, "VS", ShaderType::VS, compileFlags))
+		{
+			exit(-1);
+		}
+		if (!terrainHS.Initialize(terrainPath, "HS", ShaderType::HS, compileFlags))
+		{
+			exit(-1);
+		}
+		if (!terrainDS.Initialize(terrainPath, "DS", ShaderType::DS, compileFlags))
+		{
+			exit(-1);
+		}
+		std::wstring terrainPathPS = shaderfolder + L"terrainpixelshader.hlsl";
+		if (!terrainPS.Initialize(terrainPathPS, "PS", ShaderType::PS, compileFlags))
+		{
+			exit(-1);
+		}
+		
+		// Define the vertex input layout.
+		D3D12_INPUT_ELEMENT_DESC terrain_IED[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
+		//Create Rasterizer State
+		D3D12_RASTERIZER_DESC rasterizerDesc2;
+		ZeroMemory(&rasterizerDesc2, sizeof(D3D12_RASTERIZER_DESC));
+
+		rasterizerDesc2.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
+		rasterizerDesc2.CullMode = D3D12_CULL_MODE_BACK;
+
+		//DepthStencil
+		D3D12_DEPTH_STENCIL_DESC depth_stencilDesc2 = { 0 };
+		depth_stencilDesc2.DepthEnable = TRUE;
+		depth_stencilDesc2.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		depth_stencilDesc2.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+		// Describe and create the graphics pipeline state object (PSO).
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC quad_psoDesc = {};
+		quad_psoDesc.InputLayout = { terrain_IED, _countof(terrain_IED) };
+		quad_psoDesc.pRootSignature = root_signature.Get();
+		quad_psoDesc.VS = { reinterpret_cast<UINT8*>(terrainVS.GeBuffer()->GetBufferPointer()), terrainVS.GeBuffer()->GetBufferSize() };
+		quad_psoDesc.HS = { reinterpret_cast<UINT8*>(terrainHS.GeBuffer()->GetBufferPointer()), terrainHS.GeBuffer()->GetBufferSize() };
+		quad_psoDesc.DS = { reinterpret_cast<UINT8*>(terrainDS.GeBuffer()->GetBufferPointer()), terrainDS.GeBuffer()->GetBufferSize() };
+		quad_psoDesc.PS = { reinterpret_cast<UINT8*>(terrainPS.GeBuffer()->GetBufferPointer()), terrainPS.GeBuffer()->GetBufferSize() };
+		quad_psoDesc.RasterizerState = rasterizerDesc2;
+		quad_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		quad_psoDesc.DepthStencilState = depth_stencilDesc2;
+		quad_psoDesc.SampleMask = UINT_MAX;
+		quad_psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+		quad_psoDesc.NumRenderTargets = 1;
+		quad_psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		quad_psoDesc.SampleDesc.Count = 1;
+		quad_psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		hr = device->CreateGraphicsPipelineState(&quad_psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_quad.GetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState with Quad topology.");
+
+		quad_psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+
+		hr = device->CreateGraphicsPipelineState(&quad_psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_wireframe.GetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
+
 		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create CommandList.");
-		command_list->SetName(L"Command List");
 	}
 	catch (COMException& e)
 	{
@@ -503,6 +625,18 @@ void Graphics::InitPipelineState()
 	 HRESULT hr;
 
 	 wrl::ComPtr<ID3D12Resource> uploadBuffer;
+	 std::vector<Vertex> vertices;
+	 std::vector<DWORD> indices;
+
+	 vertices.push_back(Vertex(0.0f, 1.0f, 0.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(10.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(0.0f, -1.0f, 10.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(10.0f, -2.0f, 10.0f, 0.0f, 0.0f));
+
+	 indices.push_back(2);
+	 indices.push_back(3);
+	 indices.push_back(0);
+	 indices.push_back(1);
 
 	 try {
 		 // Describe and create a SRV for the texture.
@@ -565,6 +699,10 @@ void Graphics::InitPipelineState()
 
 		 text_mgr.CreateTexture();
 		 
+		 
+
+		 testT = new Mesh(device.Get(), command_list.Get(), vertices, indices);
+
 		 level.Initialize(4, 4, device.Get(), command_list.Get(), &camera);
 
 		 // Root Constant Buffer
@@ -610,7 +748,7 @@ void Graphics::InitPipelineState()
 		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &constantBuffer))
 			 exit(-1);
 
-		 test_go.AdjustPosition(0.0f, 0.0f, 0.0f);
+		 test_go.AdjustPosition(1.0f, 0.0f, 1.0f);
 
 		 //Create depth stencil view
 		 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -666,43 +804,19 @@ void Graphics::InitPipelineState()
 		 ErrorLogger::Log(e);
 		 exit(-1);
 	 }
-	 // Wait for the command list to execute; we are reusing the same command 
-	 // list in our main loop but for now, we just want to wait for setup to 
-	 // complete before continuing.
+
 	 WaitForGPU();
-	 //Signal and increment the fence value.
-	 /*const UINT64 fenceToWaitFor = m_fenceValue;
-	 hr = command_queue->Signal(m_fence.Get(), fenceToWaitFor);
-	 if (FAILED(hr))
-	 {
-		 ErrorLogger::Log(hr, "Failed to signal.");
-	 }
-	 m_fenceValue++;
 
-	 //Wait until the fence is completed.
-	 hr = m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent);
-	 if (FAILED(hr))
-	 {
-		 ErrorLogger::Log(hr, "Failed to wait for fence.");
-		 exit(-1);
-	 }
-	 //Shouldn't ever be a 0
-	 if (m_fenceEvent != NULL)
-		 WaitForSingleObject(m_fenceEvent, INFINITE);
-	 else
-		 exit(-1);
-
-	 m_frameIndex = swapchain->GetCurrentBackBufferIndex();*/
-
-	 /*camera.SetPosition(32.0f, 10.0f, 0.0f);
-	 camera.SetLookAtPosition(XMFLOAT3(32.0f, 5.0f, 64.0f));*/
-	 camera.SetPosition(0.0f, 1.25f, -37.5f);
+	 camera.SetPosition(5.0f, 0.0f, -5.0f);
+	 //camera.SetLookAtPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	 //camera.SetPosition(0.0f, 1.25f, -37.5f);
 	 camera.SetRotation(0.0f, 0.0f, 0.0f);
 	 camera.SetProjectionValues(90.0f, static_cast<float>(wWidth) / static_cast<float>(wHeight), 0.1f, 1000.0f);
 
 	 text_mgr.ReleaseUploadResources();
 	 level.ReleaseCreationResources();
 	 test_go.ReleaseCreationResources();
+	 testT->ReleaseLoadingResources();
  }
 
  void Graphics::PopulateCommandList()
@@ -715,10 +829,18 @@ void Graphics::InitPipelineState()
 		 hr = command_allocator[m_frameIndex]->Reset();
 		 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandAllocator.");
 
-		 // However, when ExecuteCommandList() is called on a particular command 
-		 // list, that command list can then be reset at any time and must be before re-recording.
-		 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state.Get());
-		 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandList.");
+		 if (solid)
+		 {
+			 // However, when ExecuteCommandList() is called on a particular command 
+			 // list, that command list can then be reset at any time and must be before re-recording.
+			 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state_quad.Get());
+			 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandList.");
+		 }
+		 else
+		 {
+			 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state_wireframe.Get());
+			 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandList.");
+		 }
 
 		 // Set necessary state.
 		 command_list->SetGraphicsRootSignature(root_signature.Get());
@@ -748,15 +870,26 @@ void Graphics::InitPipelineState()
 		 const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		 command_list->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		 command_list->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		 
+		 //tesselation test
+		 //command_list->SetPipelineState(pipeline_state_quad.Get());
+		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 
 		 constantBuffer.SetConstantBuffer(0);
-
+		 
 		 command_list->SetGraphicsRoot32BitConstant(4, 0, 0);
+		 //testT->Render();
 
 		 //Draw level
-		 level.Render();
+		 //command_list->SetPipelineState(pipeline_state.Get());
+		 //command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		 level.RenderMap();
+
+		 //Draw entities on map
+		 command_list->SetPipelineState(pipeline_state.Get());
+		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		 level.RenderEntities();
 
 		 //text_mgr.SetTexture(0);
 		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle2(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvsrvDescriptorSize);

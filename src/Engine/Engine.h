@@ -13,6 +13,7 @@ private:
 	void Update();
 	Timer timer;
 
+	float fov = 90.0f;
 	int frames = 0;
 	int updates = 0;
 	double delta = 0.0;

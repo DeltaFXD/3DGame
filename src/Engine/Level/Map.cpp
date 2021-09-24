@@ -48,7 +48,7 @@ float Map::GetHeight(float x, float y)
 
 float Map::GetHeight(int x, int y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return 0;
+	if (x < 0 || x > width || y < 0 || y > height) return 0.0f;
 
 	return map[x + y * width].height;
 }

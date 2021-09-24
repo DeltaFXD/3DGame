@@ -11,10 +11,10 @@ public:
 	void Destroy();
 protected:
 	WindowContainer();
+	Graphics* gfx = nullptr;
 	RenderWindow render_window;
 	KeyboardClass keyboard;
 	MouseClass mouse;
-	Graphics gfx;
 private:
 
 };

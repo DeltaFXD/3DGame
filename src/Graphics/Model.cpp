@@ -22,8 +22,10 @@ bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12Graph
 
 void Model::Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix)
 {
-	constantBufferData.mat = worldMatrix * viewProjMatrix;
-	constantBufferData.mat = XMMatrixTranspose(constantBufferData.mat);
+	constantBufferData.world = DirectX::XMMatrixIdentity();
+	constantBufferData.viewProj = worldMatrix * viewProjMatrix;
+	constantBufferData.viewProj = XMMatrixTranspose(viewProjMatrix);
+	constantBufferData.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	//Update constant buffer
 	constant_buffer->UpdateConstantBuffer(1, constantBufferData);

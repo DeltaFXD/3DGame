@@ -3,7 +3,9 @@
 
 struct CB_VS_vertexshader
 {
-	DirectX::XMMATRIX mat;
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX viewProj;
+	DirectX::XMFLOAT3 eyePos;
 };
 
 struct CB_PS_light

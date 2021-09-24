@@ -83,7 +83,7 @@ void Level::ReleaseCreationResources()
 	}
 }
 
-void Level::Render()
+void Level::RenderMap()
 {
 	for (auto it = chunks.begin(); it != chunks.end(); it++)
 	{
@@ -92,7 +92,10 @@ void Level::Render()
 			it.operator*()->Render();
 		}
 	}
+}
 
+void Level::RenderEntities()
+{
 	for (auto it = entities.begin(); it != entities.end(); it++)
 	{
 		it.operator*()->Render();

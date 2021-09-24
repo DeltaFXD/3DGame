@@ -25,7 +25,9 @@ WindowContainer::WindowContainer()
 
 void WindowContainer::Destroy()
 {
-	gfx.Destroy();
+	if (gfx != nullptr) gfx = nullptr;
+
+	Graphics::Destroy();
 }
 
 LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

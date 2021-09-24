@@ -1,6 +1,8 @@
 cbuffer cBuffer : register(b0)
 {
-    float4x4 mat;
+    float4x4 world;
+    float4x4 viewProj;
+    float3 eyePos;
 };
 
 struct ModeConstant
@@ -28,7 +30,8 @@ VS_OUTPUT main(VS_INPUT input)
 {
     VS_OUTPUT output;
     
-    output.outPosition = mul(float4(input.inPos, 1.0f), mat);
+    float4 pos = mul(float4(input.inPos, 1.0f), world);
+    output.outPosition = mul(pos, viewProj);
     output.outTexCoord = input.inTexCoord;
     output.mode = modeConstant.mode;
     if (modeConstant.mode == 0)

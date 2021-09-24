@@ -13,7 +13,8 @@ public:
 	void Initialize(int width, int height, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, Camera* camera);
 	void AddEntity(Entity* e);
 	void Update();
-	void Render();
+	void RenderEntities();
+	void RenderMap();
 	void ReleaseCreationResources();
 	float GetHeight(float x, float y);
 private:
