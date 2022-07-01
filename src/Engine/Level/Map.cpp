@@ -1,6 +1,9 @@
 #include "Map.h"
 
 const int Map::chunkSize = 64;
+const float Map::baseAmp = 1.0f;
+const float Map::ampDecay = 0.5f;
+const float Map::baseFreq = 100.0f;
 const float Map::scale = 35.71f;
 
 Map::Map(int size_x, int size_y)
@@ -80,25 +83,23 @@ void Map::Generate()
 		for (int x = 0; x < width; x++)
 		{
 			float perlin = 0.0f;
-			float amp = 10.0f;
-			float freq = 1.0f;
+			float amp = baseAmp;
+			float freq = baseFreq;
+
+			float norm = 0.0f;
+
 			for (int d = 0; d < 20; d++)
 			{
 				float sX = x / scale * freq;
 				float yX = y / scale * freq;
-				perlin += (PerlinNoise::Perlin(sX, yX) * amp);
-				amp *= 0.5f;
+				perlin += ((PerlinNoise::Perlin(sX, yX) + 1.0f) / 2.0f * amp);
+				norm += amp;
+				amp *= ampDecay;
 				freq *= 2.0f;
 			}
-			//perlin = std::max(-2.5f, perlin);
-			/*if ((rand() % 100 + 1) < 10)
-			{
-				map[x + y * width].height = 1.0;
-			}
-			else
-			{
-				map[x + y * width].height = 1.0;
-			}*/
+
+			perlin = perlin / norm;
+
 			map[x + y * width].height = perlin;
 			if (x == (width - 1) || y == (height - 1))
 			{

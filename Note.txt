@@ -1,0 +1,8 @@
+For efficiency purposes, XMVECTOR values can be passed as arguments to functions in SSE/SSE2 registers instead of on the stack.
+To do this in a platform independent way, we use the types FXMVECTOR, GXMVECTOR, HXMVECTOR and CXMVECTOR for passing XMVECTOR parameters.
+Then the rule for passing XMVECTOR parameters is that the first three XMVECTOR parameters should be of type FXMVECTOR;
+the fourth XMVECTOR should be of type GXMVECTOR; the fifth and sixth XMVECTOR parameter should be of type HXMVECTOR;
+and any additional XMVECTOR parameters should be of type CXMVECTOR.
+
+Just as we use XMFLOAT2 (2D), XMFLOAT3 (3D), and XMFLOAT4 (4D) when storing vectors in a class, it is recommended, by the DirectXMath documentation to
+use the XMFLOAT4X4 type to store matrices as class data members.

@@ -26,7 +26,7 @@ Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsComma
 			y += 1;
 			x = 0;
 		}
-		
+		//vertex.pos = XMFLOAT3((float)(x + absX), 0.0f, (float)(y + absY));
 		vertex.pos = XMFLOAT3((float)(x + absX), map->GetHeight(absX + x, absY + y), (float)(y + absY));
 		x += 1;
 		

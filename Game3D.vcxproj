@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
+    <Text Include="Note.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\GameObjects\Entities\Characters\NPC.h" />

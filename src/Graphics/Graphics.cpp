@@ -156,7 +156,7 @@ void Graphics::Render()
 	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame.
-	if (Config::IsVSyncOn())
+	if (m_vsync)
 	{
 		hr = swapchain->Present(1, 0);
 	}

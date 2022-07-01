@@ -40,6 +40,7 @@ private:
 	static bool initialized;
 
 	bool solid = true;
+	bool m_vsync = true;
 
 	Graphics(HWND hwnd, int width, int height);
 

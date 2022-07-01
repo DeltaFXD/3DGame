@@ -55,10 +55,10 @@ PatchTess ConstantHS(InputPatch<VS_OUTPUT, 4> patch, uint patchID : SV_Primitive
     // [d0, d1] defines the range we tessellate in.
 
     const float d0 = 0.0f;
-    const float d1 = 99.0f;
-    float tess = 32.0f * saturate((d1 - d) / (d1 - d0));
+    const float d1 = 100.0f;
+    float tess = 1.0f * saturate((d1 - d) / (d1 - d0));
     tess = max(tess, 1.0f);
-    tess = min(tess, 32.0f);
+    
     // Uniformly tessellate the patch.
 
     pt.EdgeTess[0] = tess;
@@ -83,7 +83,7 @@ struct HS_OUTPUT
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("ConstantHS")]
-[maxtessfactor(32.0f)]
+[maxtessfactor(16.0f)]
 HS_OUTPUT HS(InputPatch<VS_OUTPUT, 4> p,
            uint i : SV_OutputControlPointID,
            uint patchId : SV_PrimitiveID)
@@ -100,6 +100,7 @@ struct DS_OUTPUT
 {
     float4 posH : SV_POSITION;
     float2 texCoord : TEXCOORD;
+    float col : COLOR;
     uint select : SELECTOR;
 };
 
@@ -122,6 +123,7 @@ DS_OUTPUT DS(PatchTess patchTess,
     float2 tp = lerp(tv1, tv2, uv.y);
    
     //p.y = 0.3f * (p.z * sin(p.x) + p.x * cos(p.z));
+    dout.col = p.y;
     
     float4 posW = mul(float4(p, 1.0f), world);
     dout.posH = mul(posW, viewProj);
@@ -143,6 +145,6 @@ DS_OUTPUT DS(PatchTess patchTess,
     {
         dout.select = 3;
     }
-
+    
     return dout;
 }

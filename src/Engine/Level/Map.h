@@ -11,6 +11,9 @@ public:
 	~Map();
 
 	static const int chunkSize;
+	static const float baseAmp;
+	static const float ampDecay;
+	static const float baseFreq;
 	static const float scale;
 
 	float GetHeight(float x, float y);
