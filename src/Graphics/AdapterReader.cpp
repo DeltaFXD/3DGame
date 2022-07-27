@@ -2,7 +2,7 @@
 
 IDXGIAdapter1* AdapterReader::adapter = nullptr;
 
-void AdapterReader::GetHardwareAdapter(IDXGIFactory4* pFactory, IDXGIAdapter1** pAdapter)
+void AdapterReader::GetHardwareAdapter(IDXGIFactory5* pFactory, IDXGIAdapter1** pAdapter)
 {
 	if (adapter != nullptr)
 	{

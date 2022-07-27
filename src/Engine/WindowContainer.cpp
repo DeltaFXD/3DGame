@@ -34,6 +34,20 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 {
 	switch (uMsg)
 	{
+	case WM_SYSKEYDOWN:
+	{
+		//lparam bit:29 -> The context code. The value is 1 if the ALT key is down while the key is pressed
+		//lparam bit:30 -> The previous key state. The value is 1 if the key is down before the message is sent, or it is 0 if the key is up.
+		if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
+		{
+			if (gfx != nullptr && gfx->GetTearingSupport())
+			{
+				gfx->ToggleFullscreen(hwnd);
+				return 0;
+			}
+		}
+		break;
+	}
 	//Keyboard Messages
 	//https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
 	//lparam bit:30 -> previous key state

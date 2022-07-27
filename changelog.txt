@@ -117,3 +117,5 @@
 -Many things
 #2022.07.01
 -Config overhaul and misc
+#2022.07
+-Handle Alt + Enter and some misc feature

@@ -26,8 +26,11 @@ public:
 	void Render();
 	void Update();
 	void ChangeFillMode(bool state);
+	void ToggleFullscreen(HWND hwnd);
+
 	int GetWidth();
 	int GetHeight();
+	bool GetTearingSupport();
 
 	Camera camera;
 	GameObject test_go;
@@ -41,6 +44,10 @@ private:
 
 	bool solid = true;
 	bool m_vsync = true;
+	bool m_allow_tearing = false;
+	bool m_windowed_mode = true;
+
+	RECT m_window_rect;
 
 	Graphics(HWND hwnd, int width, int height);
 

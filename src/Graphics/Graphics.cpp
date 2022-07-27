@@ -40,6 +40,11 @@ int Graphics::GetWidth()
 	return wWidth;
 }
 
+bool Graphics::GetTearingSupport()
+{
+	return m_allow_tearing;
+}
+
 Graphics* Graphics::Get()
 {
 	if (initialized)
@@ -134,6 +139,65 @@ void Graphics::ChangeFillMode(bool state)
 	solid = state;
 }
 
+void Graphics::ToggleFullscreen(HWND hwnd)
+{
+	if (m_windowed_mode)
+	{
+		GetWindowRect(hwnd, &m_window_rect);
+
+		SetWindowLong(hwnd, GWL_STYLE, (WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU) & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
+
+		RECT fullscreenWindowRect;
+		try
+		{
+			if (swapchain)
+			{
+				wrl::ComPtr<IDXGIOutput> output;
+				swapchain->GetContainingOutput(&output);
+				DXGI_OUTPUT_DESC desc;
+				output->GetDesc(&desc);
+				fullscreenWindowRect = desc.DesktopCoordinates;
+			}
+			else
+			{
+				COM_ERROR_IF_FAILED(S_FALSE, "");
+			}
+		}
+		catch (COMException& e)
+		{
+			UNREFERENCED_PARAMETER(e);
+		}
+
+		SetWindowPos(
+			hwnd,
+			HWND_TOPMOST,
+			fullscreenWindowRect.left,
+			fullscreenWindowRect.top,
+			fullscreenWindowRect.right - fullscreenWindowRect.left,
+			fullscreenWindowRect.bottom - fullscreenWindowRect.top,
+			SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+		ShowWindow(hwnd, SW_MAXIMIZE);
+	}
+	else
+	{
+		SetWindowLong(hwnd, GWL_STYLE, (WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU));
+
+		SetWindowPos(
+			hwnd,
+			HWND_NOTOPMOST,
+			m_window_rect.left,
+			m_window_rect.top,
+			m_window_rect.right - m_window_rect.left,
+			m_window_rect.bottom - m_window_rect.top,
+			SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+		ShowWindow(hwnd, SW_NORMAL);
+	}
+
+	m_windowed_mode = !m_windowed_mode;
+}
+
 void Graphics::Render()
 {
 	HRESULT hr;
@@ -155,6 +219,8 @@ void Graphics::Render()
 	ID3D12CommandList* ppCommandLists[] = { command_list.Get() };
 	command_queue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
+	UINT presentFlags = (m_allow_tearing && m_windowed_mode) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
 	// Present the frame.
 	if (m_vsync)
 	{
@@ -162,7 +228,7 @@ void Graphics::Render()
 	}
 	else
 	{
-		hr = swapchain->Present(0, 0);
+		hr = swapchain->Present(0, presentFlags);
 	}
 	if (FAILED(hr))
 	{
@@ -229,10 +295,16 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 #endif
 	}
 	try {
-		wrl::ComPtr<IDXGIFactory4> factory;
+		wrl::ComPtr<IDXGIFactory5> factory;
 		//Call IDXGIFactory1::Release once the factory is no longer required.
-		HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)factory.GetAddressOf());
+		HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory5), (void**)factory.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create IDXGIFactory.");
+
+		BOOL allow_tearing = FALSE;
+
+		hr = factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allow_tearing, sizeof(allow_tearing));
+
+		m_allow_tearing = SUCCEEDED(hr) && allow_tearing;
 
 		wrl::ComPtr<IDXGIAdapter1> adapter;
 		AdapterReader::GetHardwareAdapter(factory.Get(), adapter.GetAddressOf());
@@ -272,8 +344,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.Height = wHeight;
 		scd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		scd.Stereo = FALSE;
-		//Supported by every device
-		//TODO: add config support
+
 		scd.SampleDesc.Count = 1;
 		scd.SampleDesc.Quality = 0;
 
@@ -282,7 +353,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.Scaling = DXGI_SCALING_STRETCH;
 		scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		scd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-		scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		scd.Flags = m_allow_tearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		//Fullscreen swap chain desc.
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC scfd = { 0 };
@@ -303,6 +374,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		COM_ERROR_IF_FAILED(hr, "Failed to upgrade SwapChain.");
 
 		temp_swap_chain = nullptr;
+
+		//Disable default ALT + ENTER handling
+		factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
 		m_frameIndex = swapchain->GetCurrentBackBufferIndex();
 
