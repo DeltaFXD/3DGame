@@ -119,3 +119,4 @@
 -Config overhaul and misc
 #2022.07
 -Handle Alt + Enter and some misc feature
+-Misc

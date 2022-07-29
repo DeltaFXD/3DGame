@@ -4,6 +4,8 @@
 bool Graphics::initialized = false;
 Graphics* Graphics::instance = nullptr;
 
+//TODO: Legacy fullscreen, SwapChain->SetFullscreenState
+
 Graphics::Graphics(HWND hwnd, int width, int height)
 {
 	initialized = true;
@@ -21,6 +23,8 @@ Graphics::Graphics(HWND hwnd, int width, int height)
 	m_scissorRect.top = 0;
 	m_scissorRect.right = static_cast<LONG>(width);
 	m_scissorRect.bottom = static_cast<LONG>(height);
+
+	GetWindowRect(hwnd, &m_window_rect);
 
 	constantBufferData.world = DirectX::XMMatrixIdentity();
 	constantBufferData.viewProj = DirectX::XMMatrixIdentity();
@@ -143,19 +147,23 @@ void Graphics::ToggleFullscreen(HWND hwnd)
 {
 	if (m_windowed_mode)
 	{
+		//Save current window rect
 		GetWindowRect(hwnd, &m_window_rect);
 
 		SetWindowLong(hwnd, GWL_STYLE, (WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU) & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
 
-		RECT fullscreenWindowRect;
+		RECT fullscreenWindowRect = {};
 		try
 		{
 			if (swapchain)
 			{
+				HRESULT hr;
 				wrl::ComPtr<IDXGIOutput> output;
-				swapchain->GetContainingOutput(&output);
+				hr = swapchain->GetContainingOutput(&output);
+				COM_ERROR_IF_FAILED(hr, "Failed to get output.");
 				DXGI_OUTPUT_DESC desc;
-				output->GetDesc(&desc);
+				hr = output->GetDesc(&desc);
+				COM_ERROR_IF_FAILED(hr, "Failed to get descriptor.");
 				fullscreenWindowRect = desc.DesktopCoordinates;
 			}
 			else
@@ -166,6 +174,18 @@ void Graphics::ToggleFullscreen(HWND hwnd)
 		catch (COMException& e)
 		{
 			UNREFERENCED_PARAMETER(e);
+
+			// Get primary display device
+			DEVMODE devmode = {};
+			devmode.dmSize = sizeof(DEVMODE);
+			EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devmode);
+
+			fullscreenWindowRect = {
+				devmode.dmPosition.x,
+				devmode.dmPosition.y,
+				devmode.dmPosition.x + static_cast<LONG>(devmode.dmPelsWidth),
+				devmode.dmPosition.y + static_cast<LONG>(devmode.dmPelsHeight)
+			};
 		}
 
 		SetWindowPos(
