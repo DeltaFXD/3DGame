@@ -120,3 +120,4 @@
 #2022.07
 -Handle Alt + Enter and some misc feature
 -Misc
+-Prepare normals

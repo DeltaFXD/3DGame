@@ -16,12 +16,14 @@ ConstantBuffer<ModeConstant> modeConstant : register(b1, space0);
 struct VS_INPUT
 {
     float3 inPos : POSITION;
+    float3 inNormal : NORMAL;
     float2 inTexCoord : TEXCOORD;
 };
 
 struct VS_OUTPUT
 {
     float3 outPosition : POSITION;
+    float3 outNormal : NORMAL;
     float2 outTextCoord : TEXCOORD;
 };
 
@@ -32,6 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
     
     output.outPosition = input.inPos;
     output.outTextCoord = input.inTexCoord;
+    output.outNormal = input.inNormal;
     
     return output;
 }
@@ -75,6 +78,7 @@ PatchTess ConstantHS(InputPatch<VS_OUTPUT, 4> patch, uint patchID : SV_Primitive
 struct HS_OUTPUT
 {
     float3 pos : POSITION;
+    float3 normal : NORMAL;
     float2 texCoord : TEXCOORD;
 };
 
@@ -91,6 +95,7 @@ HS_OUTPUT HS(InputPatch<VS_OUTPUT, 4> p,
     HS_OUTPUT hout;
 
     hout.pos = p[i].outPosition;
+    hout.normal = p[i].outNormal;
     hout.texCoord = p[i].outTextCoord;
 
     return hout;
@@ -99,6 +104,7 @@ HS_OUTPUT HS(InputPatch<VS_OUTPUT, 4> p,
 struct DS_OUTPUT
 {
     float4 posH : SV_POSITION;
+    float3 normal : NORMAL;
     float2 texCoord : TEXCOORD;
     float col : COLOR;
     uint select : SELECTOR;
@@ -128,6 +134,8 @@ DS_OUTPUT DS(PatchTess patchTess,
     float4 posW = mul(float4(p, 1.0f), world);
     dout.posH = mul(posW, viewProj);
     dout.texCoord = tp;
+    //TEMP
+    dout.normal = quad[0].normal;
     
     if (p.y > 7.0f)
     {

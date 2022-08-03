@@ -602,6 +602,7 @@ void Graphics::InitPipelineState()
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "NORMAL" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		};
 
@@ -662,6 +663,7 @@ void Graphics::InitPipelineState()
 		D3D12_INPUT_ELEMENT_DESC terrain_IED[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "NORMAL" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		};
 
@@ -722,10 +724,10 @@ void Graphics::InitPipelineState()
 	 std::vector<Vertex> vertices;
 	 std::vector<DWORD> indices;
 
-	 vertices.push_back(Vertex(0.0f, 1.0f, 0.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(10.0f, 0.0f, 0.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(0.0f, -1.0f, 10.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(10.0f, -2.0f, 10.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(0.0f, 1.0f, 0.0f, -10.0f, -100.0f, -20.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(10.0f, 0.0f, 0.0f, -100.0f, 100.0f, 20.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(0.0f, -1.0f, 10.0f, -20.0f, -100.0f, -20.0f, 0.0f, 0.0f));
+	 vertices.push_back(Vertex(10.0f, -2.0f, 10.0f, 10.0f, 100.0f, 20.0f, 0.0f, 0.0f));
 
 	 indices.push_back(2);
 	 indices.push_back(3);

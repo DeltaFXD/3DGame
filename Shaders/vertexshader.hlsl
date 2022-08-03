@@ -13,12 +13,14 @@ struct ModeConstant
 struct VS_INPUT
 {
     float3 inPos : POSITION;
+    float3 inNormal : NORMAL;
     float2 inTexCoord : TEXCOORD;
 };
 
 struct VS_OUTPUT
 {
     float4 outPosition : SV_POSITION;
+    float3 outNormal : NORMAL;
     float2 outTexCoord : TEXCOORD;
     uint mode : MODE;
     uint select : SELECTOR;
@@ -32,6 +34,7 @@ VS_OUTPUT main(VS_INPUT input)
     
     float4 pos = mul(float4(input.inPos, 1.0f), world);
     output.outPosition = mul(pos, viewProj);
+    output.outNormal = input.inNormal;
     output.outTexCoord = input.inTexCoord;
     output.mode = modeConstant.mode;
     if (modeConstant.mode == 0)

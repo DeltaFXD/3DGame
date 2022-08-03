@@ -7,6 +7,7 @@ cbuffer lightBuffer : register(b2)
 struct PS_INPUT
 {
     float4 inPosition : SV_POSITION;
+    float3 inNormal : NORMAL;
     float2 inTexCoord : TEXCOORD;
     uint mode : MODE;
     uint select : SELECTOR;
