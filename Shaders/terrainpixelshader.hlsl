@@ -21,6 +21,8 @@ float4 PS(PS_INPUT input) : SV_TARGET
 {
     float3 sampleColor;
     
+    input.inNormal = normalize(input.inNormal);
+    
     /*sampleColor = terrainTexture[input.select].Sample(objSamplerState, input.inTexCoord);
     
     float3 ambientLight = ambientLightColor * ambientLightStrength;
@@ -29,5 +31,5 @@ float4 PS(PS_INPUT input) : SV_TARGET
 
     float3 finalColor = float3(input.col, input.col, input.col);
     
-    return float4(finalColor, 1.0f);
+    return float4(input.inNormal, 1.0f);
 }

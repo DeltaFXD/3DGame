@@ -121,3 +121,4 @@
 -Handle Alt + Enter and some misc feature
 -Misc
 -Prepare normals
+-Calculate normals on generated mesh and test

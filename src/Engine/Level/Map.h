@@ -18,6 +18,7 @@ public:
 
 	float GetHeight(float x, float y);
 	float GetHeight(int x, int y);
+	XMFLOAT3 GetNormal(int x, int y);
 	bool IsSolid(float x, float y);
 	bool IsPenetrable(float x, float y);
 
