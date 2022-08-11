@@ -60,7 +60,7 @@ PatchTess ConstantHS(InputPatch<VS_OUTPUT, 4> patch, uint patchID : SV_Primitive
     const float d0 = 0.0f;
     const float d1 = 100.0f;
     float tess = 1.0f * saturate((d1 - d) / (d1 - d0));
-    tess = max(tess, 1.0f);
+    tess = max(tess, modeConstant.mode);
     
     // Uniformly tessellate the patch.
 
@@ -124,6 +124,10 @@ DS_OUTPUT DS(PatchTess patchTess,
     float3 v2 = lerp(quad[2].pos, quad[3].pos, uv.x);
     float3 p = lerp(v1, v2, uv.y);
     
+    float3 n1 = lerp(quad[0].normal, quad[1].normal, uv.x);
+    float3 n2 = lerp(quad[2].normal, quad[3].normal, uv.x);
+    float3 n = lerp(n1, n2, uv.y);
+    
     float2 tv1 = lerp(quad[0].texCoord, quad[1].texCoord, uv.x);
     float2 tv2 = lerp(quad[2].texCoord, quad[3].texCoord, uv.x);
     float2 tp = lerp(tv1, tv2, uv.y);
@@ -135,7 +139,7 @@ DS_OUTPUT DS(PatchTess patchTess,
     dout.posH = mul(posW, viewProj);
     dout.texCoord = tp;
     //TEMP
-    dout.normal = quad[0].normal;
+    dout.normal = n;
     
     if (p.y > 7.0f)
     {

@@ -4,7 +4,7 @@
 class GameObject
 {
 public:
-	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer);
+	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_world>* constant_buffer);
 	void Render(const XMMATRIX& viewProjMatrix);
 	void ReleaseCreationResources();
 

@@ -100,6 +100,25 @@ void Engine::Update()
 		gfx->test_go.AdjustPosition(0.0f, 0.0f, cameraSpeed);
 	}
 
+	if (keyboard.KeyIsPressed('O'))
+	{
+		static bool prev = false;
+
+		if (keyboard.KeyIsToggled('O') != prev) {
+			gfx->tess++;
+			prev = !prev;
+		}
+	}
+	if (keyboard.KeyIsPressed('L'))
+	{
+		static bool prev = false;
+
+		if (keyboard.KeyIsToggled('L') != prev) {
+			gfx->tess--;
+			prev = !prev;
+		}
+	}
+
 	if (keyboard.KeyIsPressed(VK_DOWN))
 	{
 		gfx->test_go.AdjustPosition(0.0f, 0.0f, -cameraSpeed);

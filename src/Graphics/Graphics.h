@@ -32,6 +32,8 @@ public:
 	int GetHeight();
 	bool GetTearingSupport();
 
+	int tess = 1;
+
 	Camera camera;
 	GameObject test_go;
 	Level level;
@@ -96,8 +98,10 @@ private:
 	TextureManager text_mgr;
 
 	//Shaders
-	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
-	CB_VS_vertexshader constantBufferData = CB_VS_vertexshader();
+	ConstantBuffer<CB_VS_world> cb_world;
+	ConstantBuffer<CB_VS_object> cb_object;
+	CB_VS_world cb_world_data = CB_VS_world();
+	CB_VS_object cb_object_data = CB_VS_object();
 	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
 	CB_PS_light rootConstantBufferData = CB_PS_light();
 

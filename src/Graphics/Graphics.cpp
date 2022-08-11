@@ -26,9 +26,9 @@ Graphics::Graphics(HWND hwnd, int width, int height)
 
 	GetWindowRect(hwnd, &m_window_rect);
 
-	constantBufferData.world = DirectX::XMMatrixIdentity();
-	constantBufferData.viewProj = DirectX::XMMatrixIdentity();
-	constantBufferData.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	cb_world_data.world = DirectX::XMMatrixIdentity();
+	cb_world_data.viewProj = DirectX::XMMatrixIdentity();
+	cb_world_data.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	wWidth = width;
 	wHeight = height;
@@ -225,12 +225,12 @@ void Graphics::Render()
 	//Update constant buffer
 	XMMATRIX world = XMMatrixIdentity();
 
-	constantBufferData.world = XMMatrixTranspose(world);
-	constantBufferData.viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();;
-	constantBufferData.viewProj = XMMatrixTranspose(constantBufferData.viewProj);
-	constantBufferData.eyePos = camera.GetPositionFloat3();
+	cb_world_data.world = XMMatrixTranspose(world);
+	cb_world_data.viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();;
+	cb_world_data.viewProj = XMMatrixTranspose(cb_world_data.viewProj);
+	cb_world_data.eyePos = camera.GetPositionFloat3();
 
-	constantBuffer.UpdateConstantBuffer(0, constantBufferData);
+	cb_world.UpdateConstantBuffer(0, cb_world_data);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
@@ -527,13 +527,14 @@ void Graphics::InitPipelineState()
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-
-		CD3DX12_ROOT_PARAMETER1 rootParameters[5] = {};
+		//https://docs.microsoft.com/en-us/windows/win32/direct3d12/creating-a-root-signature#code-for-defining-a-version-11-root-signature
+		CD3DX12_ROOT_PARAMETER1 rootParameters[6] = {};
 		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
 		rootParameters[2].InitAsConstantBufferView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[5].InitAsConstantBufferView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
 
 		//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 		//Create static sampler desc
@@ -835,13 +836,13 @@ void Graphics::InitPipelineState()
 		 rootConstantBuffer->Unmap(0, nullptr);
 
 		 //Initialize ConstantBuffer
-		 hr = constantBuffer.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 129);
+		 hr = cb_world.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 129);
 		 COM_ERROR_IF_FAILED(hr, "Failed to initialize ConstantBuffer.");
 
-		 constantBuffer.UpdateConstantBuffer(0, constantBufferData);
+		 cb_world.UpdateConstantBuffer(0, cb_world_data);
 
 		 //Needs constant buffer
-		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &constantBuffer))
+		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &cb_world))
 			 exit(-1);
 
 		 test_go.AdjustPosition(1.0f, 0.0f, 1.0f);
@@ -971,9 +972,9 @@ void Graphics::InitPipelineState()
 		 //command_list->SetPipelineState(pipeline_state_quad.Get());
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 
-		 constantBuffer.SetConstantBuffer(0);
+		 cb_world.SetConstantBuffer(0);
 		 
-		 command_list->SetGraphicsRoot32BitConstant(4, 0, 0);
+		 command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
 		 //testT->Render();
 
 		 //Draw level
@@ -992,7 +993,7 @@ void Graphics::InitPipelineState()
 		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle2);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 
-		 command_list->SetGraphicsRoot32BitConstant(4, 1, 0);
+		 command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
 		 //Draw model
 		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 

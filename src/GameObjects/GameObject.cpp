@@ -1,6 +1,6 @@
 #include "GameObject.h"
 
-bool GameObject::Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer)
+bool GameObject::Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_world>* constant_buffer)
 {
 	if (!model.Initialize(path, device, command_list, constant_buffer))
 		return false;

@@ -1,7 +1,12 @@
 #pragma once
 #include <DirectXMath.h>
 
-struct CB_VS_vertexshader
+struct CB_VS_object
+{
+	DirectX::XMMATRIX world;
+};
+
+struct CB_VS_world
 {
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX viewProj;

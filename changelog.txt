@@ -122,3 +122,4 @@
 -Misc
 -Prepare normals
 -Calculate normals on generated mesh and test
+-Small refactor

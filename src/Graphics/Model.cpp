@@ -1,6 +1,6 @@
 #include "Model.h"
 
-bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_vertexshader>* constant_buffer)
+bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_world>* constant_buffer)
 {
 	this->command_list = command_list;
 	this->device = device;

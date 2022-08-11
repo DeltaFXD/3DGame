@@ -159,7 +159,7 @@ void Map::Generate()
 
 			//perlin = perlin / norm;
 
-			map[x + y * width].height = perlin;
+			map[x + y * width].height = 1.0f;
 			if (x == (width - 1) || y == (height - 1))
 			{
 				map[x + y * width].flags = (MapDataFlags::OUT_OF_MAP | MapDataFlags::SOLID);
