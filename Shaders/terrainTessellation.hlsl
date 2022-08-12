@@ -1,10 +1,14 @@
-cbuffer cBuffer : register(b0)
+cbuffer cb_World : register(b0)
 {
     float4x4 world;
     float4x4 viewProj;
     float3 eyePos;
 };
 
+cbuffer cb_Object : register(b2)
+{
+    float4x4 world2;
+};
 
 struct ModeConstant
 {

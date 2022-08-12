@@ -26,9 +26,10 @@ Graphics::Graphics(HWND hwnd, int width, int height)
 
 	GetWindowRect(hwnd, &m_window_rect);
 
-	cb_world_data.world = DirectX::XMMatrixIdentity();
 	cb_world_data.viewProj = DirectX::XMMatrixIdentity();
 	cb_world_data.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	cb_object_data.world = DirectX::XMMatrixIdentity();
 
 	wWidth = width;
 	wHeight = height;
@@ -257,6 +258,9 @@ void Graphics::Render()
 		exit(-1);
 	}
 
+	//https://github.com/Microsoft/DirectXTK/wiki/GraphicsMemory
+	graphicsMemory->Commit(command_queue.Get());
+
 	MoveToNextFrame();
 }
 
@@ -328,6 +332,10 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 		wrl::ComPtr<IDXGIAdapter1> adapter;
 		AdapterReader::GetHardwareAdapter(factory.Get(), adapter.GetAddressOf());
+		if (adapter.Get() == nullptr)
+		{
+			COM_ERROR_IF_FAILED(S_FALSE, "Couldn't find suitable adapter.");
+		}
 
 		hr = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)device.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create ID3D12Device.");
@@ -404,26 +412,24 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		factory->Release();
 
 		//Create Descriptor Heaps
-		CreateDescriptorHeaps();
+		CreateRTV_DSV_DescriptorHeap();
+		
+		CreateCBV_SRV_UAV_DescriptorHeap();
 
 		m_rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		m_cbvsrvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		//Create frame resources
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
-		//--------frame0
-		hr = swapchain->GetBuffer(0, __uuidof(ID3D12Resource), (void**)render_target_view[0].GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to get back buffer.");
 
-		device->CreateRenderTargetView(render_target_view[0].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, m_rtvDescriptorSize);
-		//-----------frame 1
-		hr = swapchain->GetBuffer(1, __uuidof(ID3D12Resource), (void**)render_target_view[1].GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to get back buffer.");
+		for (UINT i = 0; i < FRAME_COUNT; i++)
+		{
+			hr = swapchain->GetBuffer(i, __uuidof(ID3D12Resource), (void**)render_target_view[i].GetAddressOf());
+			COM_ERROR_IF_FAILED(hr, "Failed to get back buffer.");
 
-		device->CreateRenderTargetView(render_target_view[1].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, m_rtvDescriptorSize);
-		//---------frame 1 end
+			device->CreateRenderTargetView(render_target_view[i].Get(), nullptr, rtvHandle);
+			rtvHandle.Offset(1, m_rtvDescriptorSize);
+		}
 
 		// Create command allocators for each frame
 		for (UINT i = 0; i < FRAME_COUNT; i++)
@@ -433,32 +439,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		}
 
 		graphicsMemory = std::make_unique<DirectX::GraphicsMemory>(device.Get());
-
-		DirectX::ResourceUploadBatch resourceUpload(device.Get());
-
-		resourceUpload.Begin();
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\sample.png", m_texture.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\diffuse.png", m_texture2.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture2 from file.");
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\snow2.png", m_mat1.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat1 from file.");
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\rock2.png", m_mat2.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat2 from file.");
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\grass2.png", m_mat3.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat3 from file.");
-
-		hr = DirectX::CreateWICTextureFromFile(device.Get(), resourceUpload, L"Data\\Textures\\land2.png", m_mat4.GetAddressOf(), false);
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic mat4 from file.");
-
-		auto uploadResourcesFinished = resourceUpload.End(command_queue.Get());
-
-		uploadResourcesFinished.wait();
 	}
 	catch (COMException& e)
 	{
@@ -468,7 +448,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	return true;
 }
 
-void Graphics::CreateDescriptorHeaps()
+void Graphics::CreateRTV_DSV_DescriptorHeap()
 {
 	try {
 		HRESULT hr;
@@ -489,6 +469,18 @@ void Graphics::CreateDescriptorHeaps()
 
 		hr = device->CreateDescriptorHeap(&dsvHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)dsvHeap.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create DSV Heap");
+	}
+	catch (COMException& e)
+	{
+		ErrorLogger::Log(e);
+		exit(-1);
+	}
+}
+
+void Graphics::CreateCBV_SRV_UAV_DescriptorHeap()
+{
+	try {
+		HRESULT hr;
 
 		// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
 		// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.

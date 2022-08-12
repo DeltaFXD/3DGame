@@ -2,16 +2,13 @@
 #include "AdapterReader.h"
 #include "Shaders.h"
 #include <d3dx12.h>
-#include "DescriptorHeap.h"
-#include "ResourceUploadBatch.h"
 #include <GraphicsMemory.h>
-#include <WICTextureLoader.h>
 #include "Camera.h"
 #include "Utility/Timer.h"
 #include "GameObjects/GameObject.h"
 #include "TextureManager.h"
 #include "Engine/Level/Level.h"
-#include <dxgidebug.h>
+#include <DXGIDebug.h>
 
 class Graphics
 {
@@ -55,7 +52,8 @@ private:
 
 	bool InitializeDirectX(HWND hwnd);
 	void InitializeScene();
-	void CreateDescriptorHeaps();
+	void CreateRTV_DSV_DescriptorHeap();
+	void CreateCBV_SRV_UAV_DescriptorHeap();
 	void InitPipelineState();
 	void PopulateCommandList();
 	void MoveToNextFrame();

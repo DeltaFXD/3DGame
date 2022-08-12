@@ -123,3 +123,4 @@
 -Prepare normals
 -Calculate normals on generated mesh and test
 -Small refactor
+-Logic refactor
