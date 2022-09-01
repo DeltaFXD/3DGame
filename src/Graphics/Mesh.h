@@ -12,11 +12,11 @@ class Mesh
 public:
 	Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, std::vector<Vertex>& vertices, std::vector<DWORD>& indicies);
 	Mesh(const Mesh& mesh);
-	void Render();
 	void ReleaseLoadingResources();
+	D3D12_INDEX_BUFFER_VIEW GetIndexBufferView() const;
+	D3D12_VERTEX_BUFFER_VIEW GetVertexBufferView() const;
+	UINT GetIndexCount();
 private:
-	ID3D12GraphicsCommandList* command_list;
-
 	VertexBuffer<Vertex> vertexBuffer;
 	IndexBuffer indexBuffer;
 };

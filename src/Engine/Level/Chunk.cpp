@@ -2,11 +2,15 @@
 
 Chunk::~Chunk()
 {
+	m_command_list = nullptr;
+
 	if (map_mesh != nullptr) delete map_mesh;
 }
 
 Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, Map* map) : x(offsetX), y(offsetY)
 {
+	m_command_list = command_list;
+
 	int absX = offsetX * (Map::chunkSize - 1);
 	int absY = offsetY * (Map::chunkSize - 1);
 
@@ -29,30 +33,10 @@ Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsComma
 		//vertex.pos = XMFLOAT3((float)(x + absX), 1.0f, (float)(y + absY));
 		vertex.pos = XMFLOAT3((float)(x + absX), map->GetHeight(absX + x, absY + y), (float)(y + absY));
 		vertex.normal = map->GetNormal(absX + x, absY + y);
-		x += 1;
-		
-		if (i % 2 == 0) {
-			if ((i / Map::chunkSize) % 2 == 0)
-			{
-				vertex.texCoord = XMFLOAT2(0.0f, 0.0f);
-			}
-			else
-			{
-				vertex.texCoord = XMFLOAT2(0.0f, 1.0f);
-			}
-		}
-		else
-		{
-			if ((i / Map::chunkSize) % 2 == 0)
-			{
-				vertex.texCoord = XMFLOAT2(1.0f, 0.0f);
-			}
-			else
-			{
-				vertex.texCoord = XMFLOAT2(1.0f, 1.0f);
-			}
-		}
+		vertex.texCoord = XMFLOAT2(static_cast<float>(x), static_cast<float>(y));
+
 		vertices.push_back(vertex);
+		x += 1;
 	}
 
 	int z = 0;
@@ -88,8 +72,11 @@ void Chunk::ReleaseUploadResources()
 
 void Chunk::Render()
 {
-	if (map_mesh != nullptr) {
-		map_mesh->Render();
+	if (map_mesh != nullptr && m_command_list != nullptr) {
+		m_command_list->IASetVertexBuffers(0, 1, &map_mesh->GetVertexBufferView());
+		m_command_list->IASetIndexBuffer(&map_mesh->GetIndexBufferView());
+
+		m_command_list->DrawIndexedInstanced(map_mesh->GetIndexCount(), 1, 0, 0, 0);
 	}
 }
 

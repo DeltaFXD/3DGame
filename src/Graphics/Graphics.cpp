@@ -515,18 +515,24 @@ void Graphics::InitPipelineState()
 			featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 		}
 
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[3] = {};
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+		//CD3DX12_DESCRIPTOR_RANGE1 ranges[3] = {};
+		/*ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);*/
 		//https://docs.microsoft.com/en-us/windows/win32/direct3d12/creating-a-root-signature#code-for-defining-a-version-11-root-signature
-		CD3DX12_ROOT_PARAMETER1 rootParameters[6] = {};
+		/*CD3DX12_ROOT_PARAMETER1 rootParameters[6] = {};
 		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
 		rootParameters[2].InitAsConstantBufferView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[5].InitAsConstantBufferView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[5].InitAsConstantBufferView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);*/
+
+		CD3DX12_ROOT_PARAMETER1 rootParameters[4] = {};
+		rootParameters[0].InitAsConstantBufferView(0); //object
+		rootParameters[1].InitAsConstantBufferView(1); //material
+		rootParameters[2].InitAsConstantBufferView(2); //world
+		rootParameters[3].InitAsConstants(1, 3); //tess
 
 		//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 		//Create static sampler desc
@@ -580,7 +586,7 @@ void Graphics::InitPipelineState()
 #endif 
 		}
 
-		std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
+		/*std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
 		if (!vertex_shader.Initialize(vertexPath, "main", ShaderType::VS, compileFlags))
 		{
 			exit(-1);
@@ -589,7 +595,7 @@ void Graphics::InitPipelineState()
 		if (!pixel_shader.Initialize(pixelPath, "main", ShaderType::PS, compileFlags))
 		{
 			exit(-1);
-		}
+		}*/
 
 		// Define the vertex input layout.
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -600,7 +606,7 @@ void Graphics::InitPipelineState()
 		};
 
 		//Create Rasterizer State
-		D3D12_RASTERIZER_DESC rasterizerDesc;
+		/*D3D12_RASTERIZER_DESC rasterizerDesc;
 		ZeroMemory(&rasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
 
 		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
@@ -629,25 +635,25 @@ void Graphics::InitPipelineState()
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 		hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
+		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");*/
 
 		
 		
 		std::wstring terrainPath = shaderfolder + L"terrainTessellation.hlsl";
-		if (!terrainVS.Initialize(terrainPath, "VS", ShaderType::VS, compileFlags))
+		if (!terrainVS.Initialize(terrainPath, nullptr, "VS", ShaderType::VS, compileFlags))
 		{
 			exit(-1);
 		}
-		if (!terrainHS.Initialize(terrainPath, "HS", ShaderType::HS, compileFlags))
+		if (!terrainHS.Initialize(terrainPath, nullptr, "HS", ShaderType::HS, compileFlags))
 		{
 			exit(-1);
 		}
-		if (!terrainDS.Initialize(terrainPath, "DS", ShaderType::DS, compileFlags))
+		if (!terrainDS.Initialize(terrainPath, nullptr, "DS", ShaderType::DS, compileFlags))
 		{
 			exit(-1);
 		}
 		std::wstring terrainPathPS = shaderfolder + L"terrainpixelshader.hlsl";
-		if (!terrainPS.Initialize(terrainPathPS, "PS", ShaderType::PS, compileFlags))
+		if (!terrainPS.Initialize(terrainPathPS, nullptr, "PS", ShaderType::PS, compileFlags))
 		{
 			exit(-1);
 		}
@@ -699,7 +705,7 @@ void Graphics::InitPipelineState()
 		hr = device->CreateGraphicsPipelineState(&quad_psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_wireframe.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
 
-		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
+		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state_quad.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create CommandList.");
 	}
 	catch (COMException& e)
@@ -728,67 +734,10 @@ void Graphics::InitPipelineState()
 	 indices.push_back(1);
 
 	 try {
-		 // Describe and create a SRV for the texture.
-		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		 srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_texture.Get(), &srvDesc, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 // Describe and create a SRV for the texture.
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
-		 srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc2.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_texture2.Get(), &srvDesc2, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-		 
-		 // Describe and create a SRV for the texture.
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3 = {};
-		 srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc3.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc3.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_mat1.Get(), &srvDesc3, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 // Describe and create a SRV for the texture.
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc4 = {};
-		 srvDesc4.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc4.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc4.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc4.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_mat2.Get(), &srvDesc4, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 // Describe and create a SRV for the texture.
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc5 = {};
-		 srvDesc5.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc5.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc5.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc5.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_mat3.Get(), &srvDesc5, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
-		 // Describe and create a SRV for the texture.
-		 D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc6 = {};
-		 srvDesc6.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		 srvDesc6.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		 srvDesc6.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		 srvDesc6.Texture2D.MipLevels = 1;
-		 device->CreateShaderResourceView(m_mat4.Get(), &srvDesc6, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-
 		 //Initialize texture manager
-		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 6, 128);
+		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 0, 128);
 
 		 text_mgr.CreateTexture();
-		 
-		 
 
 		 testT = new Mesh(device.Get(), command_list.Get(), vertices, indices);
 
@@ -819,7 +768,7 @@ void Graphics::InitPipelineState()
 		 device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
 		 CD3DX12_RANGE readRange(0, 0);
-		 UINT8* cbvDataBegin;
+		 UINT8* cbvDataBegin = nullptr;
 		 hr = rootConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&cbvDataBegin));
 		 COM_ERROR_IF_FAILED(hr, "Failed to map root constant buffer.");
 
@@ -937,12 +886,12 @@ void Graphics::InitPipelineState()
 		 command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
-		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
+		 //command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize); //Good enough for now
-		 command_list->SetGraphicsRootDescriptorTable(3, cbvsrvHandle);
+		 //command_list->SetGraphicsRootDescriptorTable(3, cbvsrvHandle);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-		 command_list->SetGraphicsRootConstantBufferView(2, rootConstantBuffer->GetGPUVirtualAddress());
+		 //command_list->SetGraphicsRootConstantBufferView(2, rootConstantBuffer->GetGPUVirtualAddress());
 		 command_list->RSSetViewports(1, &m_viewport);
 		 command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -964,9 +913,9 @@ void Graphics::InitPipelineState()
 		 //command_list->SetPipelineState(pipeline_state_quad.Get());
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 
-		 cb_world.SetConstantBuffer(0);
+		 cb_world.SetConstantBuffer(2);
 		 
-		 command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
+		 command_list->SetGraphicsRoot32BitConstant(3, tess, 0);
 		 //testT->Render();
 
 		 //Draw level
@@ -975,19 +924,19 @@ void Graphics::InitPipelineState()
 		 level.RenderMap();
 
 		 //Draw entities on map
-		 command_list->SetPipelineState(pipeline_state.Get());
+		 /*command_list->SetPipelineState(pipeline_state.Get());
 		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		 level.RenderEntities();
+		 level.RenderEntities();*/
 
 		 //text_mgr.SetTexture(0);
-		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle2(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvsrvDescriptorSize);
+		 /*CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle2(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_cbvsrvDescriptorSize);
 		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle2);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
+		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);*/
 
-		 command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
+		 //command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
 		 //Draw model
-		 test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+		 //test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 
 		 //Draw text
 		 //TODO: implement better text rendering https://www.braynzarsoft.net/viewtutorial/q16390-11-drawing-text-in-directx-12

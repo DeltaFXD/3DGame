@@ -1,5 +1,5 @@
 #pragma once
-#include "Render/RenderWindow.h"
+#include "RenderWindow.h"
 #include "Input/KeyboardClass.h"
 #include "Input/MouseClass.h"
 #include "Graphics/Graphics.h"

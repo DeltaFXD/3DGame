@@ -1,10 +1,9 @@
 #include "Model.h"
 
-bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ConstantBuffer<CB_VS_world>* constant_buffer)
+bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
 {
 	this->command_list = command_list;
 	this->device = device;
-	this->constant_buffer = constant_buffer;
 
 	try
 	{
@@ -17,26 +16,34 @@ bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12Graph
 		return false;
 	}
 
+	constant_buffer.Initialize(device, command_list, );
+
 	return true;
 }
 
-void Model::Render(const XMMATRIX& worldMatrix, const XMMATRIX& viewProjMatrix)
+Model::~Model()
+{
+	device = nullptr;
+	command_list = nullptr;
+}
+
+void Model::Render(const XMMATRIX& worldMatrix)
 {
 	constantBufferData.world = DirectX::XMMatrixIdentity();
-	constantBufferData.viewProj = worldMatrix * viewProjMatrix;
-	constantBufferData.viewProj = XMMatrixTranspose(viewProjMatrix);
-	constantBufferData.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	//Update constant buffer
-	constant_buffer->UpdateConstantBuffer(1, constantBufferData);
+	constant_buffer.UpdateConstantBuffer(0, constantBufferData);
 
 	//Set constant buffer
-	constant_buffer->SetConstantBuffer(1);
+	constant_buffer.SetConstantBuffer(0);
 
 	//Render meshes
 	for (int i = 0; i < meshes.size(); i++)
 	{
-		meshes[i].Render();
+		command_list->IASetVertexBuffers(0, 1, &meshes[i].GetVertexBufferView());
+		command_list->IASetIndexBuffer(&meshes[i].GetIndexBufferView());
+
+		command_list->DrawIndexedInstanced(meshes[i].GetIndexCount(), 1, 0, 0, 0);
 	}
 }
 

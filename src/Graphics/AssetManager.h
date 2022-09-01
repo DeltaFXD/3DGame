@@ -1,6 +1,6 @@
 #pragma once
 
-class ModelManager
+class AssetManager
 {
 public:
 

@@ -31,12 +31,6 @@
     <Filter Include="Header Files\Utility">
       <UniqueIdentifier>{f5548863-1259-4130-88e2-0d78a125cb44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Render">
-      <UniqueIdentifier>{f8d95e26-5244-4abf-8e0e-9276b8686070}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Render">
-      <UniqueIdentifier>{b6099980-681f-4336-a55c-82b88a6d487e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Graphics">
       <UniqueIdentifier>{428ac0cb-3dd3-4648-9e40-82e359ed8dd1}</UniqueIdentifier>
     </Filter>
@@ -99,9 +93,6 @@
     <ClCompile Include="src\Utility\StringConverter.cpp">
       <Filter>Source Files\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="src\Render\RenderWindow.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
     <ClCompile Include="src\Input\MouseEvent.cpp">
       <Filter>Source Files\Input</Filter>
     </ClCompile>
@@ -162,9 +153,6 @@
     <ClCompile Include="src\GameObjects\Entities\HitBox.cpp">
       <Filter>Source Files\GameObjects\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\ModelManager.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="src\Utility\AStar.cpp">
       <Filter>Source Files\Utility</Filter>
     </ClCompile>
@@ -176,6 +164,12 @@
     </ClCompile>
     <ClCompile Include="src\Graphics\AnimatedModel.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AssetManager.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\RenderWindow.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -215,9 +209,6 @@
     </ClInclude>
     <ClInclude Include="src\Input\MouseClass.h">
       <Filter>Header Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Render\RenderWindow.h">
-      <Filter>Header Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="src\Utility\Timer.h">
       <Filter>Header Files\Utility</Filter>
@@ -285,9 +276,6 @@
     <ClInclude Include="src\GameObjects\Entities\HitBox.h">
       <Filter>Header Files\GameObjects\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\ModelManager.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="src\Utility\AStar.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
@@ -303,20 +291,21 @@
     <ClInclude Include="src\Graphics\AnimatedModel.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\vertexshader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\pixelshader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
+    <ClInclude Include="src\Graphics\AssetManager.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\RenderWindow.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\terrainpixelshader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\terrainTessellation.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\LightCalc.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

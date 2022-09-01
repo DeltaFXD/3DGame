@@ -65,17 +65,11 @@ private:
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
 	wrl::ComPtr<IDXGISwapChain3> swapchain;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
-	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
+	//wrl::ComPtr<ID3D12PipelineState> pipeline_state;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state_quad;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state_wireframe;
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[FRAME_COUNT];
-	wrl::ComPtr<ID3D12Resource> m_texture;
-	wrl::ComPtr<ID3D12Resource> m_texture2;
-	wrl::ComPtr<ID3D12Resource> m_mat1;
-	wrl::ComPtr<ID3D12Resource> m_mat2;
-	wrl::ComPtr<ID3D12Resource> m_mat3;
-	wrl::ComPtr<ID3D12Resource> m_mat4;
 	wrl::ComPtr<ID3D12Resource> depth_stencil;
 	//Descriptor Heaps
 	wrl::ComPtr<ID3D12DescriptorHeap> rtvHeap;

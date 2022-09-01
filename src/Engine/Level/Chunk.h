@@ -15,4 +15,5 @@ public:
 private:
 	int x, y;
 	Mesh* map_mesh = nullptr;
+	ID3D12GraphicsCommandList* m_command_list = nullptr;
 };

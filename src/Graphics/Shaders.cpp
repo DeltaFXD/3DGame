@@ -1,6 +1,6 @@
 #include "Shaders.h"
 
-bool Shader::Initialize(std::wstring shaderpath, std::string entryPoint, ShaderType type, UINT compileFlags)
+bool Shader::Initialize(std::wstring shaderpath, const D3D_SHADER_MACRO* defines, std::string entryPoint, ShaderType type, UINT compileFlags)
 {
 	HRESULT hr;
 	std::string target = "";
@@ -28,8 +28,8 @@ bool Shader::Initialize(std::wstring shaderpath, std::string entryPoint, ShaderT
 		break;
 	}
 	}
-
-	hr = D3DCompileFromFile(shaderpath.c_str(), nullptr, nullptr, entryPoint.c_str(), target.c_str(), compileFlags, 0, &shader_buffer, nullptr);
+	
+	hr = D3DCompileFromFile(shaderpath.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), target.c_str(), compileFlags, 0, &shader_buffer, nullptr);
 	if (FAILED(hr))
 	{
 		std::wstring errorMsg = L"Failed to load shader: ";

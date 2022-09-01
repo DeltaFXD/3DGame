@@ -8,6 +8,13 @@
 
 namespace wrl = Microsoft::WRL;
 
+enum TextureType : unsigned char
+{
+	DIFFUSE,
+	NORMAL,
+	METALLIC
+};
+
 class Texture
 {
 public:

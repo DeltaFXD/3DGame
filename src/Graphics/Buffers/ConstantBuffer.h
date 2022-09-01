@@ -25,6 +25,14 @@ private:
 public:
 	ConstantBuffer() {}
 
+	~ConstantBuffer()
+	{
+		if (buffer != nullptr)
+			buffer->Unmap(0, nullptr);
+
+		bufferDataBegin = nullptr;
+	}
+
 	HRESULT Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, ID3D12DescriptorHeap* heap, UINT numView, UINT cbStart)
 	{
 		this->device = device;
@@ -36,7 +44,7 @@ public:
 
 		//Create constant buffer
 		const CD3DX12_HEAP_PROPERTIES buffer_heap_props(D3D12_HEAP_TYPE_UPLOAD);
-		const CD3DX12_RESOURCE_DESC buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize * numView);
+		const CD3DX12_RESOURCE_DESC buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(constantBufferSize) * numView);
 
 		HRESULT hr = device->CreateCommittedResource(
 			&buffer_heap_props,
@@ -73,15 +81,16 @@ public:
 	{
 		if (bufferDataBegin == nullptr)
 			return;
-		
-		memcpy(bufferDataBegin + sizeof(T) * slot, &data, sizeof(T));
+		UINT offset = sizeof(T) * slot;
+		memcpy(bufferDataBegin + offset, &data, sizeof(T));
 	}
 
 	void SetConstantBuffer(UINT slot)
 	{
-		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(heap->GetGPUDescriptorHandleForHeapStart(), cbStart + slot, cbvsrvDescriptorSize);
+		/*CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(heap->GetGPUDescriptorHandleForHeapStart(), cbStart + slot, cbvsrvDescriptorSize);
 		command_list->SetGraphicsRootDescriptorTable(1, cbvHandle);
-		cbvHandle.Offset(cbvsrvDescriptorSize);
+		cbvHandle.Offset(cbvsrvDescriptorSize);*/
+		command_list->SetGraphicsRootConstantBufferView(slot, buffer->GetGPUVirtualAddress());
 	}
 };
 

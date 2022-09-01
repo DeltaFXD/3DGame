@@ -124,3 +124,6 @@
 -Calculate normals on generated mesh and test
 -Small refactor
 -Logic refactor
+-Improve shaders
+-Fix UV coordinate calculation
+-Refactor Mesh

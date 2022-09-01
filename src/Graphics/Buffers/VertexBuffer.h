@@ -29,7 +29,7 @@ public:
 		upload_buffer.Reset();
 	}
 
-	D3D12_VERTEX_BUFFER_VIEW& Get()
+	D3D12_VERTEX_BUFFER_VIEW Get() const
 	{
 		return buffer_view;
 	}

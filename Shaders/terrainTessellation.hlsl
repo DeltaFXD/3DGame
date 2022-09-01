@@ -1,21 +1,27 @@
-cbuffer cb_World : register(b0)
+cbuffer cb_Object : register(b0)
+{
+    float4x4 world2;
+};
+
+cbuffer cb_Material : register(b1)
+{
+    float roughness;
+};
+
+cbuffer cb_World : register(b2)
 {
     float4x4 world;
     float4x4 viewProj;
     float3 eyePos;
 };
 
-cbuffer cb_Object : register(b2)
-{
-    float4x4 world2;
-};
 
 struct ModeConstant
 {
     uint mode;
 };
 
-ConstantBuffer<ModeConstant> modeConstant : register(b1, space0);
+ConstantBuffer<ModeConstant> modeConstant : register(b3);
 
 struct VS_INPUT
 {

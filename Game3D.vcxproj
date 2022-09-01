@@ -25,7 +25,7 @@
     <ClCompile Include="src\Engine\Level\Chunk.cpp" />
     <ClCompile Include="src\Engine\Level\Map.cpp" />
     <ClCompile Include="src\Graphics\AnimatedModel.cpp" />
-    <ClCompile Include="src\Graphics\ModelManager.cpp" />
+    <ClCompile Include="src\Graphics\AssetManager.cpp" />
     <ClCompile Include="src\Utility\AStar.cpp" />
     <ClCompile Include="src\Utility\PerlinNoise.cpp" />
     <ClCompile Include="src\Engine\Level\Level.cpp" />
@@ -47,7 +47,7 @@
     <ClCompile Include="src\Input\MouseClass.cpp" />
     <ClCompile Include="src\Input\MouseEvent.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Render\RenderWindow.cpp" />
+    <ClCompile Include="src\Engine\RenderWindow.cpp" />
     <ClCompile Include="src\Utility\Config.cpp" />
     <ClCompile Include="src\Utility\ErrorLogger.cpp" />
     <ClCompile Include="src\Utility\StringConverter.cpp" />
@@ -65,7 +65,7 @@
     <ClInclude Include="src\Engine\Level\Map.h" />
     <ClInclude Include="src\Engine\Level\MapData.h" />
     <ClInclude Include="src\Graphics\AnimatedModel.h" />
-    <ClInclude Include="src\Graphics\ModelManager.h" />
+    <ClInclude Include="src\Graphics\AssetManager.h" />
     <ClInclude Include="src\Utility\AStar.h" />
     <ClInclude Include="src\Utility\Node.h" />
     <ClInclude Include="src\Utility\PerlinNoise.h" />
@@ -92,7 +92,7 @@
     <ClInclude Include="src\Input\KeyboardEvent.h" />
     <ClInclude Include="src\Input\MouseClass.h" />
     <ClInclude Include="src\Input\MouseEvent.h" />
-    <ClInclude Include="src\Render\RenderWindow.h" />
+    <ClInclude Include="src\Engine\RenderWindow.h" />
     <ClInclude Include="src\Utility\COMException.h" />
     <ClInclude Include="src\Utility\Config.h" />
     <ClInclude Include="src\Utility\ErrorLogger.h" />
@@ -100,16 +100,6 @@
     <ClInclude Include="src\Utility\Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\pixelshader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
-    </FxCompile>
     <None Include="Shaders\terrainpixelshader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
@@ -120,16 +110,17 @@
       </ExcludedFromBuild>
       <FileType>Document</FileType>
     </None>
-    <FxCompile Include="Shaders\vertexshader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.1</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
-    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\LightCalc.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

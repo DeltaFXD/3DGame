@@ -35,7 +35,7 @@ public:
 		return count;
 	}
 
-	D3D12_INDEX_BUFFER_VIEW& Get()
+	D3D12_INDEX_BUFFER_VIEW Get() const
 	{
 		return buffer_view;
 	}
