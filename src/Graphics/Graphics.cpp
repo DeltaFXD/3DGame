@@ -783,10 +783,10 @@ void Graphics::InitPipelineState()
 		 cb_world.UpdateConstantBuffer(0, cb_world_data);
 
 		 //Needs constant buffer
-		 if (!test_go.Initialize("Data\\Models\\female.obj" ,device.Get(), command_list.Get(), &cb_world))
-			 exit(-1);
+		 /*if (!test_go.Initialize("Data\\Models\\female.obj", device.Get(), command_list.Get(), &cb_world))
+			 exit(-1);*/
 
-		 test_go.AdjustPosition(1.0f, 0.0f, 1.0f);
+		 //test_go.AdjustPosition(1.0f, 0.0f, 1.0f);
 
 		 //Create depth stencil view
 		 D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -853,7 +853,7 @@ void Graphics::InitPipelineState()
 
 	 text_mgr.ReleaseUploadResources();
 	 level.ReleaseCreationResources();
-	 test_go.ReleaseCreationResources();
+	 //test_go.ReleaseCreationResources();
 	 testT->ReleaseLoadingResources();
  }
 

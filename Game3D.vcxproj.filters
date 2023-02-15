@@ -171,6 +171,9 @@
     <ClCompile Include="src\Engine\RenderWindow.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\RenderItem.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="changelog.txt" />
@@ -296,6 +299,9 @@
     </ClInclude>
     <ClInclude Include="src\Engine\RenderWindow.h">
       <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\RenderItem.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

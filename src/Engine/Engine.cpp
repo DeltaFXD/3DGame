@@ -87,17 +87,17 @@ void Engine::Update()
 	
 	if (keyboard.KeyIsPressed(VK_RIGHT))
 	{
-		gfx->test_go.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
+		//gfx->test_go.AdjustPosition(cameraSpeed, 0.0f, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_LEFT))
 	{
-		gfx->test_go.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
+		//gfx->test_go.AdjustPosition(-cameraSpeed, 0.0f, 0.0f);
 	}
 
 	if (keyboard.KeyIsPressed(VK_UP))
 	{
-		gfx->test_go.AdjustPosition(0.0f, 0.0f, cameraSpeed);
+		//gfx->test_go.AdjustPosition(0.0f, 0.0f, cameraSpeed);
 	}
 
 	if (keyboard.KeyIsPressed('O'))
@@ -121,9 +121,9 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed(VK_DOWN))
 	{
-		gfx->test_go.AdjustPosition(0.0f, 0.0f, -cameraSpeed);
+		//gfx->test_go.AdjustPosition(0.0f, 0.0f, -cameraSpeed);
 	}
-	gfx->test_go.SetPosition(gfx->level.GetHeight(gfx->test_go.GetPositionFloat3().x, gfx->test_go.GetPositionFloat3().z) + 0.01f);
+	//gfx->test_go.SetPosition(gfx->level.GetHeight(gfx->test_go.GetPositionFloat3().x, gfx->test_go.GetPositionFloat3().z) + 0.01f);
 
 	if (keyboard.KeyIsPressed('W'))
 	{

@@ -16,7 +16,7 @@ bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12Graph
 		return false;
 	}
 
-	constant_buffer.Initialize(device, command_list, );
+	//constant_buffer.Initialize(device, command_list, );
 
 	return true;
 }
@@ -27,7 +27,7 @@ Model::~Model()
 	command_list = nullptr;
 }
 
-void Model::Render(const XMMATRIX& worldMatrix)
+void Model::Render()
 {
 	constantBufferData.world = DirectX::XMMatrixIdentity();
 

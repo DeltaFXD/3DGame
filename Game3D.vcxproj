@@ -26,6 +26,7 @@
     <ClCompile Include="src\Engine\Level\Map.cpp" />
     <ClCompile Include="src\Graphics\AnimatedModel.cpp" />
     <ClCompile Include="src\Graphics\AssetManager.cpp" />
+    <ClCompile Include="src\Graphics\RenderItem.cpp" />
     <ClCompile Include="src\Utility\AStar.cpp" />
     <ClCompile Include="src\Utility\PerlinNoise.cpp" />
     <ClCompile Include="src\Engine\Level\Level.cpp" />
@@ -66,6 +67,7 @@
     <ClInclude Include="src\Engine\Level\MapData.h" />
     <ClInclude Include="src\Graphics\AnimatedModel.h" />
     <ClInclude Include="src\Graphics\AssetManager.h" />
+    <ClInclude Include="src\Graphics\RenderItem.h" />
     <ClInclude Include="src\Utility\AStar.h" />
     <ClInclude Include="src\Utility\Node.h" />
     <ClInclude Include="src\Utility\PerlinNoise.h" />

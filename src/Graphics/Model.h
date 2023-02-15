@@ -10,7 +10,7 @@ class Model
 public:
 	~Model();
 	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
-	void Render(const XMMATRIX& worldMatrix);
+	void Render();
 	void ReleaseExtra();
 private:
 	std::vector<Mesh> meshes;

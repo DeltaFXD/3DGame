@@ -13,8 +13,8 @@ public:
 	Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, std::vector<Vertex>& vertices, std::vector<DWORD>& indicies);
 	Mesh(const Mesh& mesh);
 	void ReleaseLoadingResources();
-	D3D12_INDEX_BUFFER_VIEW GetIndexBufferView() const;
-	D3D12_VERTEX_BUFFER_VIEW GetVertexBufferView() const;
+	D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView();
+	D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView();
 	UINT GetIndexCount();
 private:
 	VertexBuffer<Vertex> vertexBuffer;

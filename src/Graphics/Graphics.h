@@ -7,8 +7,16 @@
 #include "Utility/Timer.h"
 #include "GameObjects/GameObject.h"
 #include "TextureManager.h"
+#include "RenderItem.h"
 #include "Engine/Level/Level.h"
 #include <DXGIDebug.h>
+
+enum class PSO_Types
+{
+	SOLID,
+	TRANSLUCENT,
+	WIREFRAME
+};
 
 class Graphics
 {
@@ -24,6 +32,7 @@ public:
 	void Update();
 	void ChangeFillMode(bool state);
 	void ToggleFullscreen(HWND hwnd);
+	//void AddRenderItemToRenderQueue(RenderItem item, PSO_Types type);
 
 	int GetWidth();
 	int GetHeight();
@@ -32,7 +41,7 @@ public:
 	int tess = 1;
 
 	Camera camera;
-	GameObject test_go;
+	//GameObject test_go;
 	Level level;
 	Mesh* testT = nullptr;
 private:

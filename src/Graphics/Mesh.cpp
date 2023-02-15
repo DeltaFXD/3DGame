@@ -14,12 +14,12 @@ Mesh::Mesh(const Mesh& mesh)
 	indexBuffer = mesh.indexBuffer;
 	vertexBuffer = mesh.vertexBuffer;
 }
-D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexBufferView()const
+D3D12_INDEX_BUFFER_VIEW& Mesh::GetIndexBufferView()
 {
 	return indexBuffer.Get();
 }
 
-D3D12_VERTEX_BUFFER_VIEW Mesh::GetVertexBufferView()const
+D3D12_VERTEX_BUFFER_VIEW& Mesh::GetVertexBufferView()
 {
 	return vertexBuffer.Get();
 }
