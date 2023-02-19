@@ -8,42 +8,42 @@ const float Map::scale = 35.71f;
 
 Map::Map(int size_x, int size_y)
 {
-	width = size_x * chunkSize;
-	height = size_y * chunkSize;
-	map = new MapData[static_cast<int64_t>(width) * height];
+	m_width = size_x * chunkSize;
+	m_height = size_y * chunkSize;
+	m_map = new MapData[static_cast<int64_t>(m_width) * m_height];
 
 	Generate();
 }
 
 Map::~Map()
 {
-	delete map;
-	map = nullptr;
+	delete m_map;
+	m_map = nullptr;
 }
 
 int Map::GetMapWidth()
 {
-	return width;
+	return m_width;
 }
 
 int Map::GetMapHeight()
 {
-	return height;
+	return m_height;
 }
 
 float Map::GetHeight(float x, float y)
 {
-	if (x <= 0 || x > width || y <= 0 || y > height) return 0.0f;
+	if (x <= 0 || x > m_width || y <= 0 || y > m_height) return 0.0f;
 
 	int x1 = static_cast<int>(x);
 	int y1 = static_cast<int>(y);
 	int x2 = x1 + 1;
 	int y2 = y1 + 1;
 
-	float q11 = map[x1 + y1 * width].height;
-	float q12 = map[x1 + y2 * width].height;
-	float q21 = map[x2 + y1 * width].height;
-	float q22 = map[x2 + y2 * width].height;
+	float q11 = m_map[x1 + y1 * m_width].height;
+	float q12 = m_map[x1 + y2 * m_width].height;
+	float q21 = m_map[x2 + y1 * m_width].height;
+	float q22 = m_map[x2 + y2 * m_width].height;
 	
 	//Bilinear interpolation
 	return ((x2 - x) * (q11 * (y2 - y) + q12 * (y - y1)) + (x - x1) * (q21 * (y2 - y) + q22 * (y - y1)));
@@ -51,25 +51,25 @@ float Map::GetHeight(float x, float y)
 
 float Map::GetHeight(int x, int y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return 0.0f;
+	if (x < 0 || x > m_width || y < 0 || y > m_height) return 0.0f;
 
-	return map[x + y * width].height;
+	return m_map[x + y * m_width].height;
 }
 
 XMFLOAT3 Map::GetNormal(int x, int y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return XMFLOAT3(0.0f, 0.0f, 0.0f);
+	if (x < 0 || x > m_width || y < 0 || y > m_height) return XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	float c = map[x + y * width].height;
+	float c = m_map[x + y * m_width].height;
 	float w = 0.0f;
 	float n = 0.0f;
 	float e = 0.0f;
 	float s = 0.0f;
 
-	if (x != 0) s = map[(x - 1) + y * width].height;
-	if (y != 0) w = map[x + (y - 1) * width].height;
-	if (x != (width - 1)) n = map[(x + 1) + y * width].height;
-	if (y != (height - 1)) e = map[x + (y + 1) * width].height;
+	if (x != 0) s = m_map[(x - 1) + y * m_width].height;
+	if (y != 0) w = m_map[x + (y - 1) * m_width].height;
+	if (x != (m_width - 1)) n = m_map[(x + 1) + y * m_width].height;
+	if (y != (m_height - 1)) e = m_map[x + (y + 1) * m_width].height;
 	// NW N NE
 	// W  C  E
 	// SW S SE
@@ -80,21 +80,21 @@ XMFLOAT3 Map::GetNormal(int x, int y)
 
 	XMFLOAT3 normal_avg(0.0f, 0.0f, 0.0f);
 
-	if (y != 0 && x != (width - 1))
+	if (y != 0 && x != (m_width - 1))
 	{
 		normal_avg.x += normal_nw.x;
 		normal_avg.y += normal_nw.y;
 		normal_avg.z += normal_nw.z;
 	}
 
-	if (y != (height - 1) && x != (width - 1))
+	if (y != (m_height - 1) && x != (m_width - 1))
 	{
 		normal_avg.x += normal_ne.x;
 		normal_avg.y += normal_ne.y;
 		normal_avg.z += normal_ne.z;
 	}
 
-	if (y != (height - 1) && x != 0)
+	if (y != (m_height - 1) && x != 0)
 	{
 		normal_avg.x += normal_se.x;
 		normal_avg.y += normal_se.y;
@@ -117,29 +117,29 @@ XMFLOAT3 Map::GetNormal(int x, int y)
 
 bool Map::IsSolid(float x, float y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return true;
+	if (x < 0 || x > m_width || y < 0 || y > m_height) return true;
 
 	int cx = static_cast<int>(x);
 	int cy = static_cast<int>(y);
 
-	return (map[cx + cy * width].flags & MapDataFlags::SOLID) ? true : false;
+	return (m_map[cx + cy * m_width].flags & MapDataFlags::SOLID) ? true : false;
 }
 
 bool Map::IsPenetrable(float x, float y)
 {
-	if (x < 0 || x > width || y < 0 || y > height) return true;
+	if (x < 0 || x > m_width || y < 0 || y > m_height) return true;
 
 	int cx = static_cast<int>(x);
 	int cy = static_cast<int>(y);
 
-	return (map[cx + cy * width].flags & MapDataFlags::PENETRABLE) ? true : false;
+	return (m_map[cx + cy * m_width].flags & MapDataFlags::PENETRABLE) ? true : false;
 }
 
 void Map::Generate()
 {
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < m_height; y++)
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < m_width; x++)
 		{
 			float perlin = 0.0f;
 			float amp = baseAmp;
@@ -159,14 +159,14 @@ void Map::Generate()
 
 			//perlin = perlin / norm;
 
-			map[x + y * width].height = 1.0f;
-			if (x == (width - 1) || y == (height - 1))
+			m_map[x + y * m_width].height = 1.0f;
+			if (x == (m_width - 1) || y == (m_height - 1))
 			{
-				map[x + y * width].flags = (MapDataFlags::OUT_OF_MAP | MapDataFlags::SOLID);
+				m_map[x + y * m_width].flags = (MapDataFlags::OUT_OF_MAP | MapDataFlags::SOLID);
 			}
 			else
 			{
-				map[x + y * width].flags = MapDataFlags::PENETRABLE;
+				m_map[x + y * m_width].flags = MapDataFlags::PENETRABLE;
 			}
 		}
 	}

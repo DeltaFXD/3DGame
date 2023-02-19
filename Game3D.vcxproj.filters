@@ -165,7 +165,7 @@
     <ClCompile Include="src\Graphics\AnimatedModel.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\AssetManager.cpp">
+    <ClCompile Include="src\Graphics\ModelManager.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine\RenderWindow.cpp">
@@ -294,7 +294,7 @@
     <ClInclude Include="src\Graphics\AnimatedModel.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\AssetManager.h">
+    <ClInclude Include="src\Graphics\ModelManager.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\RenderWindow.h">

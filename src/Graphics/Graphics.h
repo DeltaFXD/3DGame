@@ -7,6 +7,7 @@
 #include "Utility/Timer.h"
 #include "GameObjects/GameObject.h"
 #include "TextureManager.h"
+#include "ModelManager.h"
 #include "RenderItem.h"
 #include "Engine/Level/Level.h"
 #include <DXGIDebug.h>
@@ -43,7 +44,8 @@ public:
 	Camera camera;
 	//GameObject test_go;
 	Level level;
-	Mesh* testT = nullptr;
+	//Mesh* testT = nullptr;
+	ModelManager model_mgr;
 private:
 	static const UINT FRAME_COUNT = 2;
 

@@ -27,7 +27,7 @@ public:
 private:
 	void Generate();
 
-	int width;
-	int height;
-	MapData* map = nullptr;
+	int m_width;
+	int m_height;
+	MapData* m_map = nullptr;
 };

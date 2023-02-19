@@ -9,6 +9,9 @@ class Model
 {
 public:
 	~Model();
+
+	Model(const Model& rhs) = delete;
+
 	bool Initialize(const std::string& path, ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
 	void Render();
 	void ReleaseExtra();

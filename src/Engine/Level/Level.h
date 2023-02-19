@@ -18,16 +18,16 @@ public:
 	void ReleaseCreationResources();
 	float GetHeight(float x, float y);
 private:
-	std::vector<Entity*> entities;
-	std::vector<Chunk*> chunks;
+	std::vector<Entity*> m_entities;
+	std::vector<Chunk*> m_chunks;
 
-	Camera* camera = nullptr;
-	Map* map = nullptr;
+	Camera* m_camera = nullptr;
+	Map* m_map = nullptr;
 
-	int width = 0;
-	int height = 0;
-	int current_chunk_x = 0;
-	int current_chunk_y = 0;
-	float camera_x = 0.0f;
-	float camera_y = 0.0f;
+	int m_width = 0;
+	int m_height = 0;
+	int m_current_chunk_x = 0;
+	int m_current_chunk_y = 0;
+	float m_camera_x = 0.0f;
+	float m_camera_y = 0.0f;
 };

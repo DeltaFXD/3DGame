@@ -7,13 +7,13 @@ using namespace DirectX;
 class Chunk
 {
 public:
-	Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, Map* map);
+	Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsCommandList* cmd_list, Map* map);
 	~Chunk();
 	void Render();
 	bool IsWithin(int x, int y, int max_dist);
 	void ReleaseUploadResources();
 private:
-	int x, y;
-	Mesh* map_mesh = nullptr;
-	ID3D12GraphicsCommandList* m_command_list = nullptr;
+	int m_x, m_y;
+	Mesh* m_map_mesh = nullptr;
+	ID3D12GraphicsCommandList* m_cmd_list = nullptr;
 };

@@ -2,20 +2,17 @@
 
 Chunk::~Chunk()
 {
-	m_command_list = nullptr;
+	m_cmd_list = nullptr;
 
-	if (map_mesh != nullptr) delete map_mesh;
+	if (m_map_mesh != nullptr) delete m_map_mesh;
 }
 
-Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsCommandList* command_list, Map* map) : x(offsetX), y(offsetY)
+Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsCommandList* cmd_list, Map* map) : m_x(offsetX), m_y(offsetY)
 {
-	m_command_list = command_list;
+	m_cmd_list = cmd_list;
 
 	int absX = offsetX * (Map::chunkSize - 1);
 	int absY = offsetY * (Map::chunkSize - 1);
-
-	this->x = offsetX;
-	this->y = offsetY;
 
 	std::vector<Vertex> vertices;
 	std::vector<DWORD> indices;
@@ -62,26 +59,26 @@ Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsComma
 		z += 4;
 	}
 
-	map_mesh = new Mesh(device, command_list, vertices, indices);
+	m_map_mesh = new Mesh(device, m_cmd_list, vertices, indices);
 }
 
 void Chunk::ReleaseUploadResources()
 {
-	map_mesh->ReleaseLoadingResources();
+	m_map_mesh->ReleaseLoadingResources();
 }
 
 void Chunk::Render()
 {
-	if (map_mesh != nullptr && m_command_list != nullptr) {
-		m_command_list->IASetVertexBuffers(0, 1, &map_mesh->GetVertexBufferView());
-		m_command_list->IASetIndexBuffer(&map_mesh->GetIndexBufferView());
+	if (m_map_mesh != nullptr && m_cmd_list != nullptr) {
+		m_cmd_list->IASetVertexBuffers(0, 1, &m_map_mesh->GetVertexBufferView());
+		m_cmd_list->IASetIndexBuffer(&m_map_mesh->GetIndexBufferView());
 
-		m_command_list->DrawIndexedInstanced(map_mesh->GetIndexCount(), 1, 0, 0, 0);
+		m_cmd_list->DrawIndexedInstanced(m_map_mesh->GetIndexCount(), 1, 0, 0, 0);
 	}
 }
 
 bool Chunk::IsWithin(int x, int y, int max_dist)
 {
 	//return (abs(this->x - x) + abs(this->y - y)) <= max_dist;
-	return abs(this->x - x) <= max_dist && abs(this->y - y) <= max_dist;
+	return abs(m_x - x) <= max_dist && abs(m_y - y) <= max_dist;
 }

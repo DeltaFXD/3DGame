@@ -279,11 +279,11 @@ void Graphics::Destroy()
 
 	CloseHandle(instance->m_fenceEvent);
 
-	if (instance->testT != nullptr)
+	/*if (instance->testT != nullptr)
 	{
 		delete instance->testT;
 		instance->testT = nullptr;
-	}
+	}*/
 
 #ifdef _DEBUG
 	HRESULT hr;
@@ -720,7 +720,7 @@ void Graphics::InitPipelineState()
 	 HRESULT hr;
 
 	 wrl::ComPtr<ID3D12Resource> uploadBuffer;
-	 std::vector<Vertex> vertices;
+	 /*std::vector<Vertex> vertices;
 	 std::vector<DWORD> indices;
 
 	 vertices.push_back(Vertex(0.0f, 1.0f, 0.0f, -10.0f, -100.0f, -20.0f, 0.0f, 0.0f));
@@ -731,7 +731,7 @@ void Graphics::InitPipelineState()
 	 indices.push_back(2);
 	 indices.push_back(3);
 	 indices.push_back(0);
-	 indices.push_back(1);
+	 indices.push_back(1);*/
 
 	 try {
 		 //Initialize texture manager
@@ -739,7 +739,7 @@ void Graphics::InitPipelineState()
 
 		 text_mgr.CreateTexture();
 
-		 testT = new Mesh(device.Get(), command_list.Get(), vertices, indices);
+		 //testT = new Mesh(device.Get(), command_list.Get(), vertices, indices);
 
 		 level.Initialize(4, 4, device.Get(), command_list.Get(), &camera);
 
@@ -854,7 +854,7 @@ void Graphics::InitPipelineState()
 	 text_mgr.ReleaseUploadResources();
 	 level.ReleaseCreationResources();
 	 //test_go.ReleaseCreationResources();
-	 testT->ReleaseLoadingResources();
+	 //testT->ReleaseLoadingResources();
  }
 
  void Graphics::PopulateCommandList()
