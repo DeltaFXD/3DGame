@@ -20,11 +20,12 @@ public:
 	void ReleaseUploadResources();
 private:
 	ID3D12Device* m_device = nullptr;
-	ID3D12GraphicsCommandList* m_cmdList = nullptr;
+	ID3D12GraphicsCommandList* m_cmd_list = nullptr;
 
 	UINT m_nextID = 0;
 
 	//Unordered map faster for individual access by key
 	std::unordered_map<UINT, Model*> m_models;
 	std::vector<std::pair<std::string, UINT>> m_lut;
+	std::vector<Mesh> m_meshes;
 };

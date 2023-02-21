@@ -16,8 +16,6 @@ bool Model::Initialize(const std::string& path,ID3D12Device* device, ID3D12Graph
 		return false;
 	}
 
-	//constant_buffer.Initialize(device, command_list, );
-
 	return true;
 }
 
@@ -29,14 +27,6 @@ Model::~Model()
 
 void Model::Render()
 {
-	//constantBufferData.world = DirectX::XMMatrixIdentity();
-
-	//Update constant buffer
-	//constant_buffer.UpdateConstantBuffer(0, constantBufferData);
-
-	//Set constant buffer
-	//constant_buffer.SetConstantBuffer(0);
-
 	//Render meshes
 	for (int i = 0; i < meshes.size(); i++)
 	{

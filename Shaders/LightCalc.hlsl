@@ -3,8 +3,11 @@
 struct Light
 {
     float3 strength;
+    float lightPad1;
     float3 direction;
+    float lightPad2;
     float3 position;
+    float lightPad3;
 };
 
 struct Material

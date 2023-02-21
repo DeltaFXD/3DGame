@@ -24,7 +24,4 @@ private:
 
 	ID3D12GraphicsCommandList* command_list;
 	ID3D12Device* device;
-
-	CB_VS_object constantBufferData;
-	ConstantBuffer<CB_VS_object> constant_buffer;
 };

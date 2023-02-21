@@ -314,5 +314,11 @@
     <None Include="Shaders\LightCalc.hlsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Shaders\Shared.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\Default.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

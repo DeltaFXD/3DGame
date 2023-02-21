@@ -157,9 +157,9 @@ void Map::Generate()
 				freq *= 2.0f;
 			}
 
-			//perlin = perlin / norm;
+			perlin = perlin / norm * 5.0f - 5.0f;
 
-			m_map[x + y * m_width].height = 1.0f;
+			m_map[x + y * m_width].height = perlin;
 			if (x == (m_width - 1) || y == (m_height - 1))
 			{
 				m_map[x + y * m_width].flags = (MapDataFlags::OUT_OF_MAP | MapDataFlags::SOLID);
