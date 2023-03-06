@@ -76,8 +76,7 @@ private:
 	wrl::ComPtr<ID3D12GraphicsCommandList> command_list;
 	wrl::ComPtr<IDXGISwapChain3> swapchain;
 	wrl::ComPtr<ID3D12RootSignature> root_signature;
-	//wrl::ComPtr<ID3D12PipelineState> pipeline_state;
-	wrl::ComPtr<ID3D12PipelineState> pipeline_state_quad;
+	wrl::ComPtr<ID3D12PipelineState> pipeline_state;
 	wrl::ComPtr<ID3D12PipelineState> pipeline_state_wireframe;
 	//Resources
 	wrl::ComPtr<ID3D12Resource> render_target_view[FRAME_COUNT];
@@ -108,13 +107,7 @@ private:
 	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
 	CB_PS_light rootConstantBufferData = CB_PS_light();
 
-	Shader vertex_shader;
-	Shader pixel_shader;
-
-	Shader terrainVS;
-	Shader terrainPS;
-	Shader terrainDS;
-	Shader terrainHS;
+	std::unordered_map<std::string, wrl::ComPtr<ID3DBlob>> m_shaders;
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;

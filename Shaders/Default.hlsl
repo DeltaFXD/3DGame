@@ -19,7 +19,7 @@ struct VS_OUTPUT
     float2 texCoord : TEXTCOORD;
 };
 
-VS_OUTPUT VS(VS_INPUT input)
+VS_OUTPUT VS_Main(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT)0.0f;
     
@@ -34,7 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
     return output;
 }
 
-float4 PS(VS_OUTPUT input)
+float4 PS_Main(VS_OUTPUT input)
 {
     MaterialData material = materialData[materialIndex];
     

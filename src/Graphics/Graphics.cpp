@@ -515,26 +515,15 @@ void Graphics::InitPipelineState()
 			featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 		}
 
-		//CD3DX12_DESCRIPTOR_RANGE1 ranges[3] = {};
-		/*ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);*/
-		//https://docs.microsoft.com/en-us/windows/win32/direct3d12/creating-a-root-signature#code-for-defining-a-version-11-root-signature
-		/*CD3DX12_ROOT_PARAMETER1 rootParameters[6] = {};
-		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[2].InitAsConstantBufferView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParameters[3].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-		rootParameters[4].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[5].InitAsConstantBufferView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);*/
+		CD3DX12_DESCRIPTOR_RANGE1 table{};
+		table.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 64, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[4] = {};
 		rootParameters[0].InitAsConstantBufferView(0); //object
-		rootParameters[1].InitAsConstantBufferView(1); //material
-		rootParameters[2].InitAsConstantBufferView(2); //world
-		rootParameters[3].InitAsConstants(1, 3); //tess
+		rootParameters[1].InitAsShaderResourceView(0, 1); //material
+		rootParameters[2].InitAsConstantBufferView(1); //world
+		rootParameters[3].InitAsDescriptorTable(1, &table, D3D12_SHADER_VISIBILITY_PIXEL); //textures array
 
-		//TODO: Dynamic sampler example https://www.programmersought.com/article/283396314/
 		//Create static sampler desc
 		D3D12_STATIC_SAMPLER_DESC samplerDesc;
 		ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -555,7 +544,7 @@ void Graphics::InitPipelineState()
 		wrl::ComPtr<ID3DBlob> error;
 
 		hr = D3DX12SerializeVersionedRootSignature(&rsd, featureData.HighestVersion, &signature, &error);
-		COM_ERROR_IF_FAILED(hr, "Failed to SerializeRootSignature.");
+		COM_ERROR_IF_FAILED(hr, (char*)error->GetBufferPointer());
 
 		hr = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)root_signature.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create RootSignature.");
@@ -586,16 +575,10 @@ void Graphics::InitPipelineState()
 #endif 
 		}
 
-		/*std::wstring vertexPath = shaderfolder + L"vertexshader.hlsl";
-		if (!vertex_shader.Initialize(vertexPath, "main", ShaderType::VS, compileFlags))
-		{
-			exit(-1);
-		}
-		std::wstring pixelPath = shaderfolder + L"pixelshader.hlsl";
-		if (!pixel_shader.Initialize(pixelPath, "main", ShaderType::PS, compileFlags))
-		{
-			exit(-1);
-		}*/
+		std::wstring defaultShader = shaderfolder + L"Default.hlsl";
+
+		m_shaders["defaultVS"] = Shader::CreateShader(defaultShader, nullptr, "VS_Main", ShaderType::VS, compileFlags);
+		m_shaders["defaultPS"] = Shader::CreateShader(defaultShader, nullptr, "PS_Main", ShaderType::PS, compileFlags);
 
 		// Define the vertex input layout.
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -606,7 +589,7 @@ void Graphics::InitPipelineState()
 		};
 
 		//Create Rasterizer State
-		/*D3D12_RASTERIZER_DESC rasterizerDesc;
+		D3D12_RASTERIZER_DESC rasterizerDesc;
 		ZeroMemory(&rasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
 
 		rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
@@ -622,8 +605,8 @@ void Graphics::InitPipelineState()
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
 		psoDesc.pRootSignature = root_signature.Get();
-		psoDesc.VS = { reinterpret_cast<UINT8*>(vertex_shader.GeBuffer()->GetBufferPointer()), vertex_shader.GeBuffer()->GetBufferSize() };
-		psoDesc.PS = { reinterpret_cast<UINT8*>(pixel_shader.GeBuffer()->GetBufferPointer()), pixel_shader.GeBuffer()->GetBufferSize() };
+		psoDesc.VS = { reinterpret_cast<UINT8*>(m_shaders["defaultVS"]->GetBufferPointer()), m_shaders["defaultVS"]->GetBufferSize() };
+		psoDesc.PS = { reinterpret_cast<UINT8*>(m_shaders["defaultPS"]->GetBufferPointer()), m_shaders["defaultPS"]->GetBufferSize() };
 		psoDesc.RasterizerState = rasterizerDesc;
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 		psoDesc.DepthStencilState = depth_stencilDesc;
@@ -635,77 +618,14 @@ void Graphics::InitPipelineState()
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 		hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state.GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");*/
-
-		
-		
-		std::wstring terrainPath = shaderfolder + L"terrainTessellation.hlsl";
-		if (!terrainVS.Initialize(terrainPath, nullptr, "VS", ShaderType::VS, compileFlags))
-		{
-			exit(-1);
-		}
-		if (!terrainHS.Initialize(terrainPath, nullptr, "HS", ShaderType::HS, compileFlags))
-		{
-			exit(-1);
-		}
-		if (!terrainDS.Initialize(terrainPath, nullptr, "DS", ShaderType::DS, compileFlags))
-		{
-			exit(-1);
-		}
-		std::wstring terrainPathPS = shaderfolder + L"terrainpixelshader.hlsl";
-		if (!terrainPS.Initialize(terrainPathPS, nullptr, "PS", ShaderType::PS, compileFlags))
-		{
-			exit(-1);
-		}
-		
-		// Define the vertex input layout.
-		D3D12_INPUT_ELEMENT_DESC terrain_IED[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL" , 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		//Create Rasterizer State
-		D3D12_RASTERIZER_DESC rasterizerDesc2;
-		ZeroMemory(&rasterizerDesc2, sizeof(D3D12_RASTERIZER_DESC));
-
-		rasterizerDesc2.FillMode = D3D12_FILL_MODE_SOLID; //SOLID / WIREFRAME
-		rasterizerDesc2.CullMode = D3D12_CULL_MODE_BACK;
-
-		//DepthStencil
-		D3D12_DEPTH_STENCIL_DESC depth_stencilDesc2 = { 0 };
-		depth_stencilDesc2.DepthEnable = TRUE;
-		depth_stencilDesc2.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depth_stencilDesc2.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-		// Describe and create the graphics pipeline state object (PSO).
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC quad_psoDesc = {};
-		quad_psoDesc.InputLayout = { terrain_IED, _countof(terrain_IED) };
-		quad_psoDesc.pRootSignature = root_signature.Get();
-		quad_psoDesc.VS = { reinterpret_cast<UINT8*>(terrainVS.GeBuffer()->GetBufferPointer()), terrainVS.GeBuffer()->GetBufferSize() };
-		quad_psoDesc.HS = { reinterpret_cast<UINT8*>(terrainHS.GeBuffer()->GetBufferPointer()), terrainHS.GeBuffer()->GetBufferSize() };
-		quad_psoDesc.DS = { reinterpret_cast<UINT8*>(terrainDS.GeBuffer()->GetBufferPointer()), terrainDS.GeBuffer()->GetBufferSize() };
-		quad_psoDesc.PS = { reinterpret_cast<UINT8*>(terrainPS.GeBuffer()->GetBufferPointer()), terrainPS.GeBuffer()->GetBufferSize() };
-		quad_psoDesc.RasterizerState = rasterizerDesc2;
-		quad_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		quad_psoDesc.DepthStencilState = depth_stencilDesc2;
-		quad_psoDesc.SampleMask = UINT_MAX;
-		quad_psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-		quad_psoDesc.NumRenderTargets = 1;
-		quad_psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		quad_psoDesc.SampleDesc.Count = 1;
-		quad_psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-		hr = device->CreateGraphicsPipelineState(&quad_psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_quad.GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState with Quad topology.");
-
-		quad_psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-
-		hr = device->CreateGraphicsPipelineState(&quad_psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_wireframe.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
 
-		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state_quad.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
+		psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+
+		hr = device->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)pipeline_state_wireframe.GetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create PipelineState.");
+
+		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator[m_frameIndex].Get(), pipeline_state.Get(), __uuidof(ID3D12GraphicsCommandList), (void**)command_list.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create CommandList.");
 	}
 	catch (COMException& e)
