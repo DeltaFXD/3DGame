@@ -23,18 +23,18 @@ VS_OUTPUT VS_Main(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT)0.0f;
     
-    float4 posW = mul(float4(input.normalLocal, 1.0f), localToWorld);
+    float4 posW = mul(float4(input.posLocal, 1.0f), localToWorld);
     
     output.posWorld = mul(posW, viewProj);
     
-    output.normalWorld = mul(input.posLocal, (float3x3) localToWorld);
+    output.normalWorld = mul(input.normalLocal, (float3x3) localToWorld);
     
     output.texCoord = input.texCoord;
     
     return output;
 }
 
-float4 PS_Main(VS_OUTPUT input)
+float4 PS_Main(VS_OUTPUT input) : SV_TARGET
 {
     MaterialData material = materialData[materialIndex];
     

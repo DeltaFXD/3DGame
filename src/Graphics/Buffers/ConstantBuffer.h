@@ -8,9 +8,7 @@ namespace wrl = Microsoft::WRL;
 
 template<class T>
 class ConstantBuffer
-{
-private:
-	ConstantBuffer(const ConstantBuffer<T>& rhs);
+{	
 private:
 	// CB size is required to be 256-byte aligned.
 	const UINT constantBufferSize = static_cast<UINT>(sizeof(T) + (256 - sizeof(T) % 256));
@@ -24,6 +22,8 @@ private:
 	UINT cbStart = 0;
 public:
 	ConstantBuffer() {}
+
+	ConstantBuffer(const ConstantBuffer<T>& rhs) = delete;
 
 	~ConstantBuffer()
 	{

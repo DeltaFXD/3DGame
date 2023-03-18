@@ -300,6 +300,9 @@
     <ClInclude Include="src\Graphics\RenderItem.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\Buffers\GPUResourceBuffer.h">
+      <Filter>Header Files\Graphics\Buffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\terrainpixelshader.hlsl">

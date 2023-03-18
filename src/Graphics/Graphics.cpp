@@ -1,6 +1,9 @@
 #include "Graphics.h"
 #include "Utility/Config.h"
 
+#define MATERIAL_COUNT 10
+#define OBJECT_COUNT 1024
+
 bool Graphics::initialized = false;
 Graphics* Graphics::instance = nullptr;
 
@@ -26,10 +29,13 @@ Graphics::Graphics(HWND hwnd, int width, int height)
 
 	GetWindowRect(hwnd, &m_window_rect);
 
-	cb_world_data.viewProj = DirectX::XMMatrixIdentity();
-	cb_world_data.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_cb_world_data.world = DirectX::XMMatrixIdentity();
+	m_cb_world_data.viewProj = DirectX::XMMatrixIdentity();
+	m_cb_world_data.proj = DirectX::XMMatrixIdentity();
+	m_cb_world_data.eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	cb_object_data.world = DirectX::XMMatrixIdentity();
+	m_cb_default_object.localToWorld = DirectX::XMMatrixIdentity();
+	m_cb_default_object.materialIndex = 0;
 
 	wWidth = width;
 	wHeight = height;
@@ -226,12 +232,13 @@ void Graphics::Render()
 	//Update constant buffer
 	XMMATRIX world = XMMatrixIdentity();
 
-	cb_world_data.world = XMMatrixTranspose(world);
-	cb_world_data.viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();;
-	cb_world_data.viewProj = XMMatrixTranspose(cb_world_data.viewProj);
-	cb_world_data.eyePos = camera.GetPositionFloat3();
+	m_cb_world_data.world = XMMatrixTranspose(world);
+	m_cb_world_data.proj = camera.GetProjectionMatrix();
+	m_cb_world_data.viewProj = camera.GetViewMatrix() * camera.GetProjectionMatrix();
+	m_cb_world_data.viewProj = XMMatrixTranspose(m_cb_world_data.viewProj);
+	m_cb_world_data.eyePos = camera.GetPositionFloat3();
 
-	cb_world.UpdateConstantBuffer(0, cb_world_data);
+	m_scene_CB->CopyData(0, m_cb_world_data);
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
@@ -485,7 +492,7 @@ void Graphics::CreateCBV_SRV_UAV_DescriptorHeap()
 		// Describe and create a shader resource view (SRV) and a constant buffer view (CBV)
 		// Flags indicate that this descriptor heap can be bound to the pipeline and that descriptors contained in it can be referenced by a root table.
 		D3D12_DESCRIPTOR_HEAP_DESC cbvsrvHeapDesc = {};
-		cbvsrvHeapDesc.NumDescriptors = 256; //SRV + CBV
+		cbvsrvHeapDesc.NumDescriptors = 64; //SRV + CBV
 		cbvsrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		cbvsrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -516,7 +523,7 @@ void Graphics::InitPipelineState()
 		}
 
 		CD3DX12_DESCRIPTOR_RANGE1 table{};
-		table.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 64, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+		table.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[4] = {};
 		rootParameters[0].InitAsConstantBufferView(0); //object
@@ -577,8 +584,14 @@ void Graphics::InitPipelineState()
 
 		std::wstring defaultShader = shaderfolder + L"Default.hlsl";
 
-		m_shaders["defaultVS"] = Shader::CreateShader(defaultShader, nullptr, "VS_Main", ShaderType::VS, compileFlags);
-		m_shaders["defaultPS"] = Shader::CreateShader(defaultShader, nullptr, "PS_Main", ShaderType::PS, compileFlags);
+		const D3D_SHADER_MACRO textureArrayDefines[] =
+		{
+			"TEXTURE_COUNT", "1",
+			NULL, NULL
+		};
+
+		m_shaders["defaultVS"] = Shader::CreateShader(defaultShader, textureArrayDefines, "VS_Main", ShaderType::VS, compileFlags);
+		m_shaders["defaultPS"] = Shader::CreateShader(defaultShader, textureArrayDefines, "PS_Main", ShaderType::PS, compileFlags);
 
 		// Define the vertex input layout.
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -639,23 +652,9 @@ void Graphics::InitPipelineState()
  {
 	 HRESULT hr;
 
-	 wrl::ComPtr<ID3D12Resource> uploadBuffer;
-	 /*std::vector<Vertex> vertices;
-	 std::vector<DWORD> indices;
-
-	 vertices.push_back(Vertex(0.0f, 1.0f, 0.0f, -10.0f, -100.0f, -20.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(10.0f, 0.0f, 0.0f, -100.0f, 100.0f, 20.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(0.0f, -1.0f, 10.0f, -20.0f, -100.0f, -20.0f, 0.0f, 0.0f));
-	 vertices.push_back(Vertex(10.0f, -2.0f, 10.0f, 10.0f, 100.0f, 20.0f, 0.0f, 0.0f));
-
-	 indices.push_back(2);
-	 indices.push_back(3);
-	 indices.push_back(0);
-	 indices.push_back(1);*/
-
 	 try {
 		 //Initialize texture manager
-		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 0, 128);
+		 text_mgr.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 0, 1);
 
 		 text_mgr.CreateTexture();
 
@@ -663,44 +662,26 @@ void Graphics::InitPipelineState()
 
 		 level.Initialize(4, 4, device.Get(), command_list.Get(), &camera);
 
-		 // Root Constant Buffer
-		 rootConstantBufferData.ambientLightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		 rootConstantBufferData.ambientLightStrength = 0.8f;
+		 //Create Scene ConstantBuffer
+		 m_scene_CB = std::make_unique<GPUResourceBuffer<CB_Scene>>(device.Get(), 1, true);
 
-		 const UINT cbvBufferSize = static_cast<UINT>(sizeof(CB_PS_light) + (256 - sizeof(CB_PS_light) % 256));
-		 const CD3DX12_HEAP_PROPERTIES rcb_heap_props(D3D12_HEAP_TYPE_UPLOAD);
-		 const CD3DX12_RESOURCE_DESC rcb_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(cbvBufferSize);
+		 m_scene_CB->CopyData(0, m_cb_world_data);
 
-		 // Create Root CBV
-		 hr = device->CreateCommittedResource(
-			 &rcb_heap_props,
-			 D3D12_HEAP_FLAG_NONE,
-			 &rcb_resource_desc,
-			 D3D12_RESOURCE_STATE_GENERIC_READ,
-			 nullptr, __uuidof(ID3D12Resource), (void**)rootConstantBuffer.GetAddressOf()
-		 );
-		 COM_ERROR_IF_FAILED(hr, "Failed to create Root CBV.");
+		 m_material = std::make_unique<GPUResourceBuffer<CB_Material>>(device.Get(), MATERIAL_COUNT, false);
 
-		 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		 cbvDesc.BufferLocation = rootConstantBuffer->GetGPUVirtualAddress();
-		 cbvDesc.SizeInBytes = cbvBufferSize;
-		 CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvsrvHeap->GetCPUDescriptorHandleForHeapStart(), 128, m_cbvsrvDescriptorSize);
-		 device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+		 m_object_CB = std::make_unique<GPUResourceBuffer<CB_Object>>(device.Get(), OBJECT_COUNT, true);
 
-		 CD3DX12_RANGE readRange(0, 0);
-		 UINT8* cbvDataBegin = nullptr;
-		 hr = rootConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&cbvDataBegin));
-		 COM_ERROR_IF_FAILED(hr, "Failed to map root constant buffer.");
+		 m_object_CB->CopyData(0, m_cb_default_object);
 
-		 memcpy(cbvDataBegin, &rootConstantBufferData, sizeof(rootConstantBufferData));
+		 for (int i = 0; i < MATERIAL_COUNT; i++)
+		 {
+			 CB_Material default_data;
+			 default_data.diffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+			 default_data.freshnelR0 = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			 default_data.shininess = 1.0f;
 
-		 rootConstantBuffer->Unmap(0, nullptr);
-
-		 //Initialize ConstantBuffer
-		 hr = cb_world.Initialize(device.Get(), command_list.Get(), cbvsrvHeap.Get(), 2, 129);
-		 COM_ERROR_IF_FAILED(hr, "Failed to initialize ConstantBuffer.");
-
-		 cb_world.UpdateConstantBuffer(0, cb_world_data);
+			 m_material->CopyData(i, default_data);
+		 }
 
 		 //Needs constant buffer
 		 /*if (!test_go.Initialize("Data\\Models\\female.obj", device.Get(), command_list.Get(), &cb_world))
@@ -791,7 +772,7 @@ void Graphics::InitPipelineState()
 		 {
 			 // However, when ExecuteCommandList() is called on a particular command 
 			 // list, that command list can then be reset at any time and must be before re-recording.
-			 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state_quad.Get());
+			 hr = command_list->Reset(command_allocator[m_frameIndex].Get(), pipeline_state.Get());
 			 COM_ERROR_IF_FAILED(hr, "Failed to Reset CommandList.");
 		 }
 		 else
@@ -805,13 +786,17 @@ void Graphics::InitPipelineState()
 		 ID3D12DescriptorHeap* ppHeaps[] = { cbvsrvHeap.Get() };
 		 command_list->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-		 CD3DX12_GPU_DESCRIPTOR_HANDLE cbvsrvHandle(cbvsrvHeap->GetGPUDescriptorHandleForHeapStart(), 0, m_cbvsrvDescriptorSize);
-		 //command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize); //Good enough for now
-		 //command_list->SetGraphicsRootDescriptorTable(3, cbvsrvHandle);
-		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);
-		 //command_list->SetGraphicsRootConstantBufferView(2, rootConstantBuffer->GetGPUVirtualAddress());
+		 command_list->SetGraphicsRootDescriptorTable(3, cbvsrvHeap->GetGPUDescriptorHandleForHeapStart());
+
+		 auto worldCB = m_scene_CB->Get();
+		 command_list->SetGraphicsRootConstantBufferView(2, worldCB->GetGPUVirtualAddress());
+
+		 auto material = m_material->Get();
+		 command_list->SetGraphicsRootShaderResourceView(1, material->GetGPUVirtualAddress());
+
+		 auto objectDefaultCB = m_object_CB->Get();
+		 command_list->SetGraphicsRootConstantBufferView(0, objectDefaultCB->GetGPUVirtualAddress());
+
 		 command_list->RSSetViewports(1, &m_viewport);
 		 command_list->RSSetScissorRects(1, &m_scissorRect);
 
@@ -828,19 +813,9 @@ void Graphics::InitPipelineState()
 		 const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		 command_list->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		 command_list->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-		 
-		 //tesselation test
-		 //command_list->SetPipelineState(pipeline_state_quad.Get());
-		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
-
-		 cb_world.SetConstantBuffer(2);
-		 
-		 command_list->SetGraphicsRoot32BitConstant(3, tess, 0);
-		 //testT->Render();
 
 		 //Draw level
-		 //command_list->SetPipelineState(pipeline_state.Get());
-		 //command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		 command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		 level.RenderMap();
 
 		 //Draw entities on map
@@ -854,7 +829,6 @@ void Graphics::InitPipelineState()
 		 command_list->SetGraphicsRootDescriptorTable(0, cbvsrvHandle2);
 		 cbvsrvHandle.Offset(m_cbvsrvDescriptorSize);*/
 
-		 //command_list->SetGraphicsRoot32BitConstant(4, tess, 0);
 		 //Draw model
 		 //test_go.Render(camera.GetViewMatrix() * camera.GetProjectionMatrix());
 

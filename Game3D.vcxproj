@@ -65,6 +65,7 @@
     <ClInclude Include="src\Engine\Level\Map.h" />
     <ClInclude Include="src\Engine\Level\MapData.h" />
     <ClInclude Include="src\Graphics\AnimatedModel.h" />
+    <ClInclude Include="src\Graphics\Buffers\GPUResourceBuffer.h" />
     <ClInclude Include="src\Graphics\ModelManager.h" />
     <ClInclude Include="src\Graphics\RenderItem.h" />
     <ClInclude Include="src\Utility\AStar.h" />

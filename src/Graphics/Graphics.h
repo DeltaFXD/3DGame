@@ -1,5 +1,6 @@
 #pragma once
 #include "AdapterReader.h"
+#include "Buffers/GPUResourceBuffer.h"
 #include "Shaders.h"
 #include <d3dx12.h>
 #include <GraphicsMemory.h>
@@ -100,14 +101,15 @@ private:
 	TextureManager text_mgr;
 
 	//Shaders
-	ConstantBuffer<CB_VS_world> cb_world;
-	ConstantBuffer<CB_VS_object> cb_object;
-	CB_VS_world cb_world_data = CB_VS_world();
-	CB_VS_object cb_object_data = CB_VS_object();
-	wrl::ComPtr<ID3D12Resource> rootConstantBuffer;
-	CB_PS_light rootConstantBufferData = CB_PS_light();
-
 	std::unordered_map<std::string, wrl::ComPtr<ID3DBlob>> m_shaders;
+
+	//Buffers
+	std::unique_ptr < GPUResourceBuffer<CB_Object>> m_object_CB = nullptr;
+	std::unique_ptr < GPUResourceBuffer<CB_Scene>> m_scene_CB = nullptr;
+	std::unique_ptr < GPUResourceBuffer<CB_Material>> m_material = nullptr;
+
+	CB_Scene m_cb_world_data = CB_Scene();
+	CB_Object m_cb_default_object = CB_Object();
 
 	//Fencing
 	wrl::ComPtr<ID3D12Fence> m_fence;

@@ -38,25 +38,25 @@ Chunk::Chunk(int offsetX, int offsetY, ID3D12Device* device, ID3D12GraphicsComma
 
 	int z = 0;
 	int a = Map::chunkSize - 1;
-	for (int i = 0; z < ((Map::chunkSize - 1) * (Map::chunkSize - 1) * 4); i++)
+	for (int i = 0; z < ((Map::chunkSize - 1) * (Map::chunkSize - 1) * 6); i++)
 	{
 		if (i != 0 && i % a == 0) {
 			a += Map::chunkSize;
 			continue;
 		}
-		/*indices.push_back(i);
+		indices.push_back(i);
 		indices.push_back(i + Map::chunkSize);
 		indices.push_back(i + Map::chunkSize + 1);
 
 		indices.push_back(i);
 		indices.push_back(i + Map::chunkSize + 1);
 		indices.push_back(i + 1);
-		z += 6;*/
-		indices.push_back(i + Map::chunkSize + 1);
+		z += 6;
+		/*indices.push_back(i + Map::chunkSize + 1);
 		indices.push_back(i + 1);
 		indices.push_back(i + Map::chunkSize);
 		indices.push_back(i);
-		z += 4;
+		z += 4;*/
 	}
 
 	m_map_mesh = new Mesh(device, m_cmd_list, vertices, indices);
